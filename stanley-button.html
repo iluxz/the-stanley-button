@@ -188,16 +188,15 @@
 
       <div class="panelScreen" id="screenTutorial">
         <h2>Tutorial</h2>
-        <p>quick orientation before the narrator gets mean.</p>
-        <div id="tutorialCard" style="border:1px solid rgba(199,154,59,.28);background:linear-gradient(180deg,rgba(199,154,59,.09),rgba(0,0,0,.12));padding:20px;min-height:220px">
-          <div id="tutStep" style="font:12px/1 Consolas,monospace;color:#a89774;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px">step 1 / 5</div>
-          <div id="tutTitle" style="font:28px/1.2 Georgia,serif;color:#f0e4ca;margin-bottom:10px"></div>
-          <div id="tutBody" style="font:14px/1.8 Consolas,monospace;color:#b9ab91"></div>
+        <p>interactive narrated training. the narrator will talk you through it while you actually play.</p>
+        <div class="statGrid">
+          <div class="statCard"><div class="k">format</div><div class="v" style="font-size:22px">live</div></div>
+          <div class="statCard"><div class="k">voice</div><div class="v" style="font-size:22px">narrator</div></div>
+          <div class="statCard"><div class="k">risk</div><div class="v" style="font-size:22px">low</div></div>
         </div>
         <div class="menuActions">
-          <button id="tutPrev" type="button">prev</button>
-          <button class="primaryAction" id="tutNext" type="button">next</button>
-          <button id="tutSkip" type="button" onclick="window.__sbTutorialDone&&window.__sbTutorialDone()">skip/finish</button>
+          <button class="primaryAction" id="tutStart" type="button" onclick="window.__sbTutorial&&window.__sbTutorial()">start tutorial</button>
+          <button onclick="window.__sbNav&&window.__sbNav('main')">back</button>
         </div>
       </div>
 
@@ -347,6 +346,8 @@
   let dailyMode = false;
   let dailySeed = '';
   let rng = Math.random;
+  let tutorialMode = false;
+  let tutorialStep = 0;
 
   function defaultMeta(){ return { bestScore:0,bestStreak:0,runs:0,totalRounds:0,totalPass:0,totalFail:0,totalPresses:0,shopBuys:0,ach:{} , seenRules:{}, tutorialDone:false }; }
   function loadMeta(){ try{ return { ...defaultMeta(), ...(JSON.parse(localStorage.getItem(LS_META)||'{}')||{}) }; }catch{ return defaultMeta(); } }
@@ -573,6 +574,26 @@
 
   function nextRule(){
     if(gameOver) return;
+    if(tutorialMode){
+      const steps = makeTutorialRules();
+      if(tutorialStep >= steps.length){ finishTutorialRun(true); return; }
+      clearAmbient();
+      rule = steps[tutorialStep];
+      rule.time = rule.baseTime;
+      lastWasLingeringIntro = false;
+      pressCount=0; signal='idle'; goSaid=false; lastPressAt=0; locked=false;
+      roundStart=performance.now(); timerMs=rule.time; timerLeft=timerMs;
+      ruleLabel.textContent=`tutorial ${tutorialStep+1}/${steps.length}: ${rule.label}`;
+      ruleState.textContent='active'; ruleText.textContent=rule.text;
+      ruleHint.textContent = rule.hint || '';
+      setButtonMode(''); setMeter(1); updateHud();
+      if(rule.setup) rule.setup();
+      setLine(rule.narrator || rule.text, 'tutorial');
+      cancelAnimationFrame(raf);
+      if(!paused) raf=requestAnimationFrame(tick);
+      return;
+    }
+
     randomizeAmbient();
     if(shouldIntroduceLingering()){
       const mem = memoryDeck.shift();
@@ -616,11 +637,25 @@
     if(dailyMode && gameOver) grant('daily-attempt');
   }
 
-  function endRound(success,msg){
+  function failSoft(msg){ endRound(false,msg,true); }
+
+  function endRound(success,msg,softFail=false){
     if(locked||gameOver) return;
     locked=true; cancelAnimationFrame(raf);
     if(rule && rule.cleanup) rule.cleanup();
     setMeter(0);
+    if(tutorialMode){
+      if(success){
+        tutorialStep++;
+        ruleState.textContent='passed'; setButtonMode('good'); setLine(msg||'correct.', 'tutorial');
+      } else {
+        ruleState.textContent='try again'; setButtonMode('bad'); setLine(msg||'not quite. try again.', 'tutorial');
+      }
+      updateHud();
+      setTimeout(()=>{ if(!gameOver) nextRule(); }, 1500);
+      return;
+    }
+
     meta.totalRounds = (meta.totalRounds||0)+1;
     if(success){
       meta.totalPass = (meta.totalPass||0)+1;
@@ -670,11 +705,13 @@
   }
 
   function useSkip(){
+    if(tutorialMode){ setLine('no skipping the tutorial. i am watching.', 'tutorial'); return; }
     if(paused||gameOver||locked||!rule||skipCharges<=0) { if(skipCharges<=0) setLine('no skip tokens. the narrator smiles.', 'shop required'); return; }
     skipCharges--; setLine('rule skipped. the narrator pretends this did not happen.', 'skip token used');
     round++; nextRule(); updateHud();
   }
   function useReroll(){
+    if(tutorialMode){ setLine('no rerolling the tutorial. endure the lesson.', 'tutorial'); return; }
     if(paused||gameOver||locked||!rule||rerollCharges<=0) { if(rerollCharges<=0) setLine('no reroll tokens. suffer as intended.', 'shop required'); return; }
     rerollCharges--; setLine('rerolling reality. please hold.', 'reroll token used');
     if(rule && rule.cleanup) rule.cleanup();
@@ -697,7 +734,8 @@
     { date:'2026-11-22', title:'menu, shop, more rules', items:['full-screen game menu','shop with expensive score boosts','more normal rules and special instructions','fixed impossible memory/press rule combos'] },
     { date:'2026-11-22', title:'music bridge', items:['void-records-server music player in settings','base URL, volume, prev/play/next, now playing','mixed-content warning for https pages using http localhost'] },
     { date:'2026-11-22', title:'massive feature pack', items:['daily seeded challenge mode','stats/codex screen + persistent meta','achievements tracking','accessibility settings (reduced motion, big text, high contrast)','shop: skip/reroll tokens and in-run skip/reroll controls'] },
-    { date:'2026-11-22', title:'first-time tutorial', items:['tutorial screen with 5 quick steps','auto-shows for first-time players','tutorial button in main menu, skip/finish persists'] }
+    { date:'2026-11-22', title:'first-time tutorial', items:['tutorial screen with 5 quick steps','auto-shows for first-time players','tutorial button in main menu, skip/finish persists'] },
+    { date:'2026-11-22', title:'narrated gameplay tutorial', items:['replaced static tutorial with interactive narrated gameplay','tutorial runs real rules with narrator voice/TTS lines','soft-fail retries in tutorial, completion marks tutorialDone'] }
   ];
   function renderUpdates(){
     const el = document.getElementById('updateLog');
@@ -712,31 +750,61 @@
       </div>`).join('');
   }
 
-  const TUTORIAL_STEPS = [
-    { title:'The Button', body:'You get a rule. You decide: press the button, or do not press it. Sounds easy. The narrator disagrees.' },
-    { title:'Read Carefully', body:'Some rules are simple ("press the button"). Some are tricks ("do not press", "wait for green", "press twice with a pause"). The timer and hint are there to help - barely.' },
-    { title:'Special Instructions', body:'Sometimes the narrator gives a lingering instruction like "do not press the button when there are spiders." It stays active for future rounds. The narrator will not remind you. Remember it.' },
-    { title:'Strikes, Score, Tools', body:'3 strikes = game over. Passing gives score; streaks give more. Shop sells shields, repairs, boost, skip/reroll tokens. Use skip/reroll in-run when you panic.' },
-    { title:'Modes & Settings', body:'Daily Challenge is a seeded same-day run. Settings has TTS, void-records music, and accessibility. Stats/Codex tracks what you have seen. Now press start and disappoint the narrator.' }
-  ];
-  let tutIndex = 0;
-  function renderTutorial(){
-    const step = TUTORIAL_STEPS[tutIndex] || TUTORIAL_STEPS[0];
-    const s = document.getElementById('tutStep'); if(s) s.textContent = `step ${tutIndex+1} / ${TUTORIAL_STEPS.length}`;
-    const t = document.getElementById('tutTitle'); if(t) t.textContent = step.title;
-    const b = document.getElementById('tutBody'); if(b) b.textContent = step.body;
-    const prev = document.getElementById('tutPrev'); if(prev) prev.disabled = tutIndex===0;
-    const next = document.getElementById('tutNext'); if(next) next.textContent = tutIndex===TUTORIAL_STEPS.length-1 ? 'finish' : 'next';
-  }
-  function tutorialNext(){
-    if(tutIndex < TUTORIAL_STEPS.length-1){ tutIndex++; renderTutorial(); }
-    else finishTutorial();
-  }
-  function tutorialPrev(){ if(tutIndex>0){ tutIndex--; renderTutorial(); } }
-  function openTutorial(){ tutIndex=0; showMenu(false); showScreen('tutorial'); }
-  function finishTutorial(){
-    if(!meta.tutorialDone){ meta.tutorialDone = true; saveMeta(); }
-    showScreen('main');
+  function makeTutorialRules(){
+    return [
+      {
+        id:'tut-press', label:'tutorial', baseTime:8000,
+        text:'Press the button.',
+        hint:'go on. press it. this one is free.',
+        narrator:'Welcome to the tutorial. I am the narrator. That is the button. Press it. This should not be difficult.',
+        onPress(){ pass('You pressed the button. Extraordinary. A true prodigy.'); },
+        onTimeout(){ failSoft('You were supposed to press the button. Let us try that again, with more pressing.'); }
+      },
+      {
+        id:'tut-nopress', label:'tutorial', baseTime:5500,
+        text:'Do not press the button.',
+        hint:'sometimes the correct action is inaction. shocking.',
+        narrator:'Excellent. Now, do not press the button. I know it is tempting. Resist the urge. Just sit there. Doing nothing. Like you were born for it.',
+        onPress(){ failSoft('I said do NOT press the button. Listening is a skill. We can work on it.'); },
+        onTimeout(){ pass('You did nothing. Perfect. You may have found your calling.'); }
+      },
+      {
+        id:'tut-wait-green', label:'tutorial', baseTime:9000,
+        text:'Wait for green.',
+        hint:'red means wait. green means go. society depends on this.',
+        narrator:'Some rules have timing. This button will turn green. Press it only when it is green. Not before. Not in a blind panic. When it is green.',
+        setup(){ setButtonMode('wait'); ruleState.textContent='wait...'; setTimeout(()=>{ if(rule && rule.id==='tut-wait-green' && !locked){ signal='go'; setButtonMode('good'); ruleText.textContent='NOW! press the button!'; setLine('NOW. Press it.', 'green means go'); } }, 2600); },
+        onPress(){ if(signal!=='go') failSoft('Too early. Green means go. That was not green. Try again.'); else pass('Green light, button pressed. Civilization continues.'); },
+        onTimeout(){ if(signal==='go') failSoft('It was green and you missed it. The button was right there.'); else failSoft('Something went wrong. Let us retry that.'); }
+      },
+      {
+        id:'tut-memory-intro', label:'special instruction', baseTime:6500,
+        text:'Special instruction: do not press the button when there are spiders.',
+        hint:'remember this. i will not repeat it.',
+        narrator:'Pay attention. I am about to give you a special instruction. It will apply to future rounds. I will not remind you. Your memory is now part of the game. Good luck with that.',
+        setup(){ setButtonMode('wait'); },
+        onPress(){ ruleHint.textContent='no need to press. just remember it.'; },
+        onTimeout(){ activeMemories.push({id:'tut-spiders', introText:'Special instruction: do not press the button when there are spiders.', check:(rule,pressed)=>{ if(pressed && ambient.spiders>0) return 'there were spiders. you were told about the spiders.'; return null; } }); updateHud(); pass('Noted. Spiders mean no pressing. I will not bring this up again.'); }
+      },
+      {
+        id:'tut-memory-test', label:'tutorial', baseTime:8000,
+        text:'Press the button.',
+        hint:'looks simple. look around.',
+        narrator:'Simple rule. Press the button. Unless, of course, there is a reason not to. Look around the room. Use your eyes. And your memory.',
+        setup(){ clearAmbient(); placeIcon('spider','🕷',3); ambient.spiders=3; setButtonMode(''); },
+        onPress(){ failSoft('Spiders. There were spiders. I told you about the spiders. This is exactly what I was talking about.'); },
+        onTimeout(){ pass('You remembered the spiders. I am genuinely impressed. Do not let it go to your head.'); }
+      },
+      {
+        id:'tut-tools', label:'tutorial', baseTime:8500,
+        text:'Press the button.',
+        hint:'shop gives shields, skip, reroll. this time, just press.',
+        narrator:'Final lesson. You have a shop for shields, repairs, and tokens. Skip and reroll can save a bad round. For now, just press the button and complete your training.',
+        setup(){ clearAmbient(); setButtonMode(''); },
+        onPress(){ pass('Tutorial complete. You are now minimally qualified to disappoint me in a real game.'); },
+        onTimeout(){ failSoft('It was the last step. You just had to press the button. One more time.'); }
+      }
+    ];
   }
 
   function renderStats(){
@@ -836,8 +904,6 @@
   document.getElementById('settingsCloseBtn').addEventListener('click', ()=>showScreen('main'));
   document.getElementById('skipBtn').addEventListener('click', useSkip);
   document.getElementById('rerollBtn').addEventListener('click', useReroll);
-  document.getElementById('tutNext').addEventListener('click', tutorialNext);
-  document.getElementById('tutPrev').addEventListener('click', tutorialPrev);
 
   window.__sbMenu = ()=>showMenu(false);
   window.__sbStart = ()=>{ if(gameStarted&&!gameOver) hideMenu(); else resetRun(dailyMode); };
