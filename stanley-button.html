@@ -156,6 +156,7 @@
         <button class="active" data-screen="main" id="navMain">Main Menu</button>
         <button data-screen="shop" id="navShop">Shop</button>
         <button data-screen="settings" id="navSettings">Settings</button>
+        <button data-screen="updates" id="navUpdates">Updates</button>
         <button data-screen="credits" id="navCredits">Credits</button>
       </nav>
     </aside>
@@ -224,6 +225,13 @@
         <div class="menuActions">
           <button class="primaryAction" id="settingsCloseBtn" type="button" onclick="window.__sbSettingsClose&&window.__sbSettingsClose()">back to menu</button>
         </div>
+      </div>
+
+      <div class="panelScreen" id="screenUpdates">
+        <h2>Update Log</h2>
+        <p>changes, fixes, and narrator-approved nonsense. oldest to newest.</p>
+        <div id="updateLog" style="display:flex;flex-direction:column;gap:12px;max-height:360px;overflow:auto;padding-right:4px"></div>
+        <div class="menuActions"><button class="primaryAction" onclick="window.__sbNav&&window.__sbNav('main')">back</button></div>
       </div>
 
       <div class="panelScreen" id="screenCredits">
@@ -585,6 +593,24 @@
     {id:'streak', name:'Streak Lock', desc:'Next failure keeps your streak. Denial as a service.', cost:2800, buy(){ streakLockRounds+=3; return 'streak lock loaded. consequences delayed.'; }},
     {id:'hint', name:'Narrator Clarity', desc:'Clearer hints for 5 rounds. The narrator hates being helpful.', cost:2200, buy(){ hintBoostRounds+=5; return 'clarity purchased. the narrator sighs.'; }}
   ];
+  const UPDATE_LOG = [
+    { date:'2026-11-22', title:'initial release', items:['rule-based button game with narrator','special lingering instructions, strikes, streaks, scoring','game menu with settings and credits'] },
+    { date:'2026-11-22', title:'menu, shop, more rules', items:['full-screen game menu','shop with expensive score boosts','more normal rules and special instructions','fixed impossible memory/press rule combos'] },
+    { date:'2026-11-22', title:'music bridge', items:['void-records-server music player in settings','base URL, volume, prev/play/next, now playing','mixed-content warning for https pages using http localhost'] }
+  ];
+  function renderUpdates(){
+    const el = document.getElementById('updateLog');
+    if(!el) return;
+    el.innerHTML = UPDATE_LOG.map(u => `
+      <div style="border:1px solid rgba(239,230,210,.12);background:rgba(0,0,0,.18);padding:14px">
+        <div style="display:flex;justify-content:space-between;gap:12px;align-items:baseline;margin-bottom:8px">
+          <div style="font:15px/1.3 Consolas,monospace;color:#f0e4ca;text-transform:uppercase;letter-spacing:.04em">${u.title}</div>
+          <div style="font:12px/1 Consolas,monospace;color:#a89774">${u.date}</div>
+        </div>
+        <ul style="margin:0;padding-left:18px;color:#b9ab91;font:13px/1.7 Consolas,monospace">${u.items.map(i=>`<li>${i}</li>`).join('')}</ul>
+      </div>`).join('');
+  }
+
   function renderShop(){
     shopGrid.innerHTML='';
     SHOP_ITEMS.forEach(item=>{
@@ -612,6 +638,7 @@
     const el=document.getElementById('screen'+name.charAt(0).toUpperCase()+name.slice(1));
     if(el) el.classList.add('show');
     if(name==='shop') renderShop();
+    if(name==='updates') renderUpdates();
   }
   function showMenu(showSettings){
     paused=true; pauseStartedAt=performance.now(); cancelAnimationFrame(raf);
