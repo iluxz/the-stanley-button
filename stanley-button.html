@@ -1,0 +1,535 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>the stanley button</title>
+<style>
+  :root{--bg:#141311;--paper:#efe6d2;--ink:#1e1b17;--muted:#655d52;--red:#a63a2b;--gold:#c79a3b;--good:#6f9b63;--bad:#c45a4a;--purple:#7b5ea7;--panel:#1b1916;--edge:rgba(239,230,210,.14)}
+  *{box-sizing:border-box} html,body{height:100%;margin:0}
+  body{min-height:100%;padding:24px;background:radial-gradient(circle at 50% 20%,#2b2823,#141311 62%);color:var(--paper);font-family:Georgia,"Times New Roman",serif;overflow-x:hidden;transition:background .5s,filter .4s}
+  body.purple{background:radial-gradient(circle at 50% 20%,#352a45,#171320 62%)}
+  .room{width:min(960px,100%);margin:0 auto;text-align:center;position:relative}
+  .narrator{min-height:132px;padding:24px 24px 18px;border:1px solid rgba(239,230,210,.18);background:rgba(0,0,0,.22);border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.35);margin-bottom:18px}
+  .line{font-size:clamp(22px,3.3vw,38px);line-height:1.35;margin:0;transition:opacity .2s ease,transform .2s ease}
+  .line.swap{opacity:0;transform:translateY(6px)}
+  .sub{margin-top:14px;color:#cfc2a5;font-size:14px;letter-spacing:.08em;text-transform:uppercase}
+  .hud{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin:0 0 16px}
+  .hud div{padding:10px 12px;border:1px solid var(--edge);background:rgba(239,230,210,.04);border-radius:10px;font:12px/1.3 Consolas,monospace;color:#cfc3ad}
+  .hud b{display:block;color:var(--paper);font-size:18px;margin-top:4px;font-family:Georgia,serif}
+  .ruleCard{margin:0 0 18px;padding:18px 20px;border:1px solid rgba(199,154,59,.28);background:linear-gradient(180deg,rgba(199,154,59,.09),rgba(0,0,0,.12));border-radius:12px;text-align:left;position:relative}
+  .ruleTop{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:8px}
+  .ruleLabel{font:12px/1 Consolas,monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
+  .ruleState{font:12px/1 Consolas,monospace;color:#cfc3ad}
+  .ruleText{font-size:clamp(20px,2.7vw,30px);line-height:1.35;margin:0}
+  .ruleHint{margin-top:8px;color:#b7ac98;font:13px/1.5 Consolas,monospace;min-height:20px}
+  .meterWrap{margin-top:12px;height:10px;background:rgba(239,230,210,.08);border-radius:999px;overflow:hidden;border:1px solid rgba(239,230,210,.08)}
+  .meter{height:100%;width:100%;background:linear-gradient(90deg,var(--gold),#e4bf68);transform-origin:left center}
+  .stage{display:flex;flex-direction:column;align-items:center;gap:18px;position:relative;padding:10px 0}
+  .ambient{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+  .spider,.skull,.cat,.shhSign,.moon,.dontSign{position:absolute;user-select:none}
+  .spider{font-size:28px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5));animation:bob 2.8s ease-in-out infinite}
+  .skull{font-size:30px;filter:drop-shadow(0 2px 6px rgba(0,0,0,.6));animation:bob 3.2s ease-in-out infinite}
+  .cat{font-size:30px;filter:drop-shadow(0 2px 6px rgba(0,0,0,.5));animation:bob 2.6s ease-in-out infinite}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+  .moon{top:8px;right:18px;font-size:34px;filter:drop-shadow(0 0 12px rgba(255,240,200,.35));opacity:0;transition:opacity .4s}
+  .moon.on{opacity:1}
+  .dontSign,.shhSign{top:14px;font:700 13px/1 Consolas,monospace;padding:6px 10px;letter-spacing:.1em;opacity:0;transition:opacity .3s}
+  .dontSign{left:18px;color:#ff8c80;border:2px solid rgba(255,140,128,.5);background:rgba(60,20,20,.45);transform:rotate(-7deg)}
+  .shhSign{left:18px;top:52px;color:#ffd27d;border:2px solid rgba(255,210,125,.45);background:rgba(60,45,15,.45);transform:rotate(4deg)}
+  .dontSign.on,.shhSign.on{opacity:1}
+  .button-wrap{position:relative;padding:22px;border-radius:999px;background:linear-gradient(180deg,#403a33,#211d19);box-shadow:inset 0 2px 0 rgba(255,255,255,.08),0 18px 40px rgba(0,0,0,.45);z-index:2}
+  #theButton{appearance:none;border:0;cursor:pointer;width:min(290px,70vw);height:min(290px,70vw);border-radius:50%;background:radial-gradient(circle at 35% 30%,#d04a39,#a63a2b 58%,#6d2018 100%);color:#fff5ef;font:700 clamp(28px,5vw,44px) Georgia,serif;letter-spacing:.04em;text-shadow:0 3px 0 rgba(0,0,0,.25);box-shadow:inset 0 10px 25px rgba(255,255,255,.22),inset 0 -18px 30px rgba(0,0,0,.28),0 18px 0 #531913,0 28px 40px rgba(0,0,0,.45);transition:transform .06s ease,box-shadow .06s ease,filter .2s,background .2s}
+  #theButton:hover{filter:brightness(1.03)}
+  #theButton:active,.pressed{transform:translateY(10px);box-shadow:inset 0 10px 25px rgba(255,255,255,.18),inset 0 -18px 30px rgba(0,0,0,.28),0 8px 0 #531913,0 12px 24px rgba(0,0,0,.45)}
+  #theButton.good{background:radial-gradient(circle at 35% 30%,#7cb06f,#5f8855 58%,#35502f 100%);box-shadow:inset 0 10px 25px rgba(255,255,255,.2),inset 0 -18px 30px rgba(0,0,0,.25),0 18px 0 #2b4026,0 28px 40px rgba(0,0,0,.45)}
+  #theButton.bad{background:radial-gradient(circle at 35% 30%,#8a3e36,#6d2d27 58%,#441916 100%)}
+  #theButton.wait{background:radial-gradient(circle at 35% 30%,#ad7a35,#8a5f25 58%,#56390f 100%);box-shadow:inset 0 10px 25px rgba(255,255,255,.18),inset 0 -18px 30px rgba(0,0,0,.28),0 18px 0 #412b0b,0 28px 40px rgba(0,0,0,.45)}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+  .ctl{background:rgba(239,230,210,.06);color:var(--paper);border:1px solid var(--edge);padding:9px 14px;border-radius:999px;font:14px/1 Consolas,monospace;cursor:pointer}
+  .ctl:hover{background:rgba(239,230,210,.12)}
+  .tiny{color:#8e8578;font:12px/1.6 Consolas,monospace;margin-top:2px}
+
+  /* game menu */
+  .overlay{position:fixed;inset:0;display:none;z-index:50;background:
+    radial-gradient(ellipse at 50% 0%,rgba(199,154,59,.08),transparent 35%),
+    linear-gradient(180deg,rgba(20,18,15,.96),rgba(10,9,8,.98));
+  }
+  .overlay.show{display:block}
+  .menuShell{width:min(1100px,100%);min-height:100%;margin:0 auto;padding:40px 24px;display:grid;grid-template-columns:320px 1fr;gap:28px;align-items:start}
+  .menuBrand{padding:28px 10px 10px;position:sticky;top:20px}
+  .menuEyebrow{font:12px/1 Consolas,monospace;color:#a89774;letter-spacing:.2em;text-transform:uppercase;margin-bottom:14px}
+  .menuTitle{font-size:clamp(42px,7vw,76px);line-height:.92;margin:0 0 12px;letter-spacing:.02em;color:#f3e8cf;text-shadow:0 4px 30px rgba(0,0,0,.45)}
+  .menuTitle span{display:block;color:var(--gold);font-size:.48em;letter-spacing:.18em;margin-top:10px}
+  .menuTag{color:#b9ab91;font:14px/1.7 Consolas,monospace;max-width:28ch;margin:18px 0 28px}
+  .menuNav{display:flex;flex-direction:column;gap:10px}
+  .menuNav button{appearance:none;border:1px solid rgba(239,230,210,.12);background:rgba(255,255,255,.02);color:var(--paper);padding:16px 18px;text-align:left;font:16px/1 Consolas,monospace;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;position:relative;transition:.15s;border-radius:2px}
+  .menuNav button::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:transparent;transition:.15s}
+  .menuNav button:hover,.menuNav button.active{background:rgba(199,154,59,.08);border-color:rgba(199,154,59,.35);color:#fff3d6;transform:translateX(4px)}
+  .menuNav button:hover::before,.menuNav button.active::before{background:var(--gold)}
+  .menuPanel{min-height:520px;background:linear-gradient(180deg,rgba(35,31,27,.72),rgba(20,18,15,.72));border:1px solid rgba(239,230,210,.1);box-shadow:0 30px 100px rgba(0,0,0,.45);padding:28px;position:relative;overflow:hidden}
+  .menuPanel::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent,rgba(0,0,0,.12));pointer-events:none}
+  .panelScreen{display:none;position:relative;z-index:1}
+  .panelScreen.show{display:block}
+  .panelScreen h2{margin:0 0 8px;font-size:clamp(28px,4vw,42px);color:#f0e4ca}
+  .panelScreen p{margin:0 0 18px;color:#b9ab91;font:14px/1.7 Consolas,monospace}
+  .statGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:18px 0 24px}
+  .statCard{padding:14px;border:1px solid var(--edge);background:rgba(0,0,0,.18)}
+  .statCard .k{font:11px/1 Consolas,monospace;color:#a89774;text-transform:uppercase;letter-spacing:.1em}
+  .statCard .v{font:28px/1.2 Georgia,serif;color:#f3e8cf;margin-top:8px}
+  .shopGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .shopItem{border:1px solid var(--edge);background:rgba(0,0,0,.2);padding:14px}
+  .shopItem h3{margin:0 0 6px;font:16px/1.3 Consolas,monospace;color:#f0e4ca;text-transform:uppercase;letter-spacing:.04em}
+  .shopItem p{margin:0 0 12px;font:12px/1.6 Consolas,monospace;color:#b9ab91;min-height:38px}
+  .shopMeta{display:flex;justify-content:space-between;align-items:center;gap:10px;font:12px/1 Consolas,monospace;color:#cfc2a5}
+  .buyBtn{appearance:none;border:1px solid rgba(199,154,59,.4);background:rgba(199,154,59,.08);color:var(--gold);padding:8px 12px;font:12px/1 Consolas,monospace;cursor:pointer;text-transform:uppercase;letter-spacing:.06em}
+  .buyBtn:hover:not(:disabled){background:rgba(199,154,59,.18)}
+  .buyBtn:disabled{opacity:.45;cursor:not-allowed;border-color:rgba(239,230,210,.15);color:#998d79}
+  .shopNote{margin-top:16px;padding:12px 14px;border:1px dashed rgba(199,154,59,.25);color:#d4c39e;font:12px/1.7 Consolas,monospace;background:rgba(199,154,59,.04)}
+  .field{margin:0 0 16px}
+  .field label{display:block;font:12px/1 Consolas,monospace;color:#cfc2a5;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px}
+  .field select,.toggleRow{width:100%;font:14px/1.4 Consolas,monospace;color:var(--paper);background:rgba(239,230,210,.05);border:1px solid var(--edge);padding:11px 12px}
+  .field select option{color:#111}
+  .toggleRow{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .toggleRow input{width:20px;height:20px;accent-color:var(--gold)}
+  .menuActions{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap}
+  .menuActions button,.primaryAction{appearance:none;border:1px solid rgba(239,230,210,.18);background:rgba(239,230,210,.05);color:var(--paper);padding:12px 16px;font:14px/1 Consolas,monospace;cursor:pointer;text-transform:uppercase;letter-spacing:.06em}
+  .menuActions button:hover,.primaryAction:hover{background:rgba(239,230,210,.12)}
+  .primaryAction{border-color:rgba(199,154,59,.45);color:var(--gold);background:rgba(199,154,59,.08)}
+
+  @media (max-width:900px){.menuShell{grid-template-columns:1fr;}.menuBrand{position:static;padding-top:0}.shopGrid{grid-template-columns:1fr}}
+  @media (max-width:760px){.hud{grid-template-columns:repeat(3,minmax(0,1fr))}.ruleCard{text-align:center}.ruleTop{flex-direction:column}.statGrid{grid-template-columns:1fr 1fr}}
+  @media (max-width:480px){.hud{grid-template-columns:repeat(2,minmax(0,1fr))}.statGrid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main class="room">
+  <section class="narrator" aria-live="polite">
+    <p class="line" id="line">stanley saw a button. the narrator saw a teaching opportunity. this was already going poorly.</p>
+    <div class="sub" id="sub">follow the rule. pay attention. the narrator is not going to repeat himself.</div>
+  </section>
+
+  <section class="hud">
+    <div>round<b id="hudRound">1</b></div>
+    <div>score<b id="hudScore">0</b></div>
+    <div>strikes<b id="hudStrikes">0 / 3</b></div>
+    <div>streak<b id="hudStreak">0</b></div>
+    <div>noted<b id="hudNoted">0</b></div>
+    <div>shield<b id="hudShield">0</b></div>
+  </section>
+
+  <section class="ruleCard">
+    <div class="ruleTop">
+      <div class="ruleLabel" id="ruleLabel">current instruction</div>
+      <div class="ruleState" id="ruleState">waiting</div>
+    </div>
+    <p class="ruleText" id="ruleText">loading rules...</p>
+    <div class="ruleHint" id="ruleHint"></div>
+    <div class="meterWrap"><div class="meter" id="meter"></div></div>
+  </section>
+
+  <section class="stage">
+    <div class="ambient" id="ambient">
+      <div class="moon" id="moon">🌙</div>
+      <div class="dontSign" id="dontSign">DON'T</div>
+      <div class="shhSign" id="shhSign">SHH</div>
+    </div>
+    <div class="button-wrap"><button id="theButton" type="button">push me</button></div>
+    <div class="controls">
+      <button class="ctl" id="menuBtn" type="button" onclick="window.__sbMenu&&window.__sbMenu()">menu</button>
+      <button class="ctl" id="resetBtn" type="button" onclick="window.__sbReset&&window.__sbReset()">reset game</button>
+    </div>
+    <div class="tiny">some things the narrator says will matter later. he will not bring them up again. space/enter also presses the button.</div>
+  </section>
+</main>
+
+<div class="overlay show" id="overlay">
+  <div class="menuShell">
+    <aside class="menuBrand">
+      <div class="menuEyebrow">interactive narrative disappointment</div>
+      <h1 class="menuTitle">THE STANLEY<span>BUTTON</span></h1>
+      <div class="menuTag">a button. some rules. a narrator. and an increasingly unreasonable amount of things to remember.</div>
+      <nav class="menuNav">
+        <button class="active" data-screen="main" id="navMain">Main Menu</button>
+        <button data-screen="shop" id="navShop">Shop</button>
+        <button data-screen="settings" id="navSettings">Settings</button>
+        <button data-screen="credits" id="navCredits">Credits</button>
+      </nav>
+    </aside>
+    <section class="menuPanel">
+      <div class="panelScreen show" id="screenMain">
+        <h2 id="menuHeading">Main Menu</h2>
+        <p id="menuSub">press start. follow instructions. make the narrator regret everything.</p>
+        <div class="statGrid">
+          <div class="statCard"><div class="k">current score</div><div class="v" id="mScore">0</div></div>
+          <div class="statCard"><div class="k">best streak</div><div class="v" id="mStreak">0</div></div>
+          <div class="statCard"><div class="k">round</div><div class="v" id="mRound">1</div></div>
+        </div>
+        <div class="menuActions">
+          <button class="primaryAction" id="startBtn" type="button" onclick="window.__sbStart&&window.__sbStart()">start game</button>
+          <button id="menuResetBtn" type="button" onclick="window.__sbReset&&window.__sbReset()">new run</button>
+        </div>
+      </div>
+
+      <div class="panelScreen" id="screenShop">
+        <h2>Shop</h2>
+        <p>spend score on questionable advantages. prices are offensive on purpose.</p>
+        <div class="statGrid">
+          <div class="statCard"><div class="k">spendable score</div><div class="v" id="shopScore">0</div></div>
+          <div class="statCard"><div class="k">shields</div><div class="v" id="shopShield">0</div></div>
+          <div class="statCard"><div class="k">active boosts</div><div class="v" id="shopBoosts">0</div></div>
+        </div>
+        <div class="shopGrid" id="shopGrid"></div>
+        <div class="shopNote" id="shopNote">the narrator does not endorse capitalism. he does endorse survival.</div>
+      </div>
+
+      <div class="panelScreen" id="screenSettings">
+        <h2>Settings</h2>
+        <p>configure the narrator. he already has opinions about this.</p>
+        <div class="field">
+          <label for="ttsToggle">narrator tts</label>
+          <div class="toggleRow"><span>speak lines out loud</span><input id="ttsToggle" type="checkbox"></div>
+        </div>
+        <div class="field">
+          <label for="voiceSelect">narrator voice</label>
+          <select id="voiceSelect"></select>
+        </div>
+        <div class="menuActions">
+          <button class="primaryAction" id="settingsCloseBtn" type="button" onclick="window.__sbSettingsClose&&window.__sbSettingsClose()">back to menu</button>
+        </div>
+      </div>
+
+      <div class="panelScreen" id="screenCredits">
+        <h2>Credits</h2>
+        <p>designed to be simple, annoying, and slightly unfair in a way the narrator finds entertaining.</p>
+        <div class="statGrid">
+          <div class="statCard"><div class="k">voice</div><div class="v" style="font-size:22px">your browser</div></div>
+          <div class="statCard"><div class="k">antagonist</div><div class="v" style="font-size:22px">the button</div></div>
+          <div class="statCard"><div class="k">victim</div><div class="v" style="font-size:22px">stanley</div></div>
+        </div>
+        <div class="menuActions"><button class="primaryAction" onclick="window.__sbNav&&window.__sbNav('main')">back</button></div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+(() => {
+  const lineEl = document.getElementById('line');
+  const subEl = document.getElementById('sub');
+  const button = document.getElementById('theButton');
+  const menuBtn = document.getElementById('menuBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const hudRound = document.getElementById('hudRound');
+  const hudScore = document.getElementById('hudScore');
+  const hudStrikes = document.getElementById('hudStrikes');
+  const hudStreak = document.getElementById('hudStreak');
+  const hudNoted = document.getElementById('hudNoted');
+  const hudShield = document.getElementById('hudShield');
+  const ruleLabel = document.getElementById('ruleLabel');
+  const ruleState = document.getElementById('ruleState');
+  const ruleText = document.getElementById('ruleText');
+  const ruleHint = document.getElementById('ruleHint');
+  const meter = document.getElementById('meter');
+  const ambientEl = document.getElementById('ambient');
+  const moonEl = document.getElementById('moon');
+  const dontSignEl = document.getElementById('dontSign');
+  const shhSignEl = document.getElementById('shhSign');
+  const overlay = document.getElementById('overlay');
+  const startBtn = document.getElementById('startBtn');
+  const menuResetBtn = document.getElementById('menuResetBtn');
+  const ttsToggle = document.getElementById('ttsToggle');
+  const voiceSelect = document.getElementById('voiceSelect');
+  const shopGrid = document.getElementById('shopGrid');
+  const shopNote = document.getElementById('shopNote');
+
+  const LS_TTS = 'stanley_tts';
+  const LS_VOICE = 'stanley_tts_voice';
+
+  let tts = localStorage.getItem(LS_TTS) === '1';
+  let selectedVoiceName = localStorage.getItem(LS_VOICE) || '';
+  let round = 1, score = 0, strikes = 0, streak = 0, bestStreak = 0;
+  let gameOver = false, gameStarted = false, paused = true, pauseStartedAt = 0;
+  let rule = null, deck = [], memoryDeck = [], activeMemories = [], lastWasLingeringIntro = false;
+  let pressCount = 0, roundStart = 0, timerMs = 0, timerLeft = 0, raf = 0, locked = false;
+  let signal = 'red', goSaid = false, fakeGoTimer = 0, realGoTimer = 0, counterNum = 0, counterTimer = 0, lastPressAt = 0;
+  let ambient = { spiders: 0, moon: false, purple: false, dont: false, skull: false, cat: false, shh: false };
+  let shields = 0, slowRounds = 0, doubleRounds = 0, streakLockRounds = 0, hintBoostRounds = 0;
+
+  const passLines = ['correct. stanley followed instructions. mark the calendar.','astonishing. he did the thing he was told to do.','the narrator is pleasantly surprised and immediately suspicious.','yes! that was it. do not let it go to your head, stanley.','a flawless performance. the bar was on the floor, but still.'];
+  const failLines = ['no. no, that was not it. stanley, were you listening at all?','the narrator gave one instruction. one. incredible.','stanley pressed the button with confidence and incorrectness.','wrong. profoundly, unmistakably wrong.','that was almost right in the way that a fire is almost a swimming pool.'];
+
+  function availableVoices(){ if (!('speechSynthesis' in window)) return []; return window.speechSynthesis.getVoices().slice().sort((a,b)=>{ const ae=/en/i.test(a.lang)?0:1, be=/en/i.test(b.lang)?0:1; if(ae!==be) return ae-be; return (a.name||'').localeCompare(b.name||''); }); }
+  function refreshVoiceSelect(){ const voices = availableVoices(); voiceSelect.innerHTML=''; const auto=document.createElement('option'); auto.value=''; auto.textContent=voices.length?'auto (narrator-ish english)':'no voices available'; voiceSelect.appendChild(auto); voices.forEach(v=>{ const opt=document.createElement('option'); opt.value=v.name; opt.textContent=`${v.name} (${v.lang})${v.default?' — default':''}`; voiceSelect.appendChild(opt); }); if(selectedVoiceName && voices.some(v=>v.name===selectedVoiceName)) voiceSelect.value=selectedVoiceName; else voiceSelect.value=''; }
+  function pickVoice(){ const voices=availableVoices(); if(selectedVoiceName){ const exact=voices.find(v=>v.name===selectedVoiceName); if(exact) return exact; } return voices.find(v=>/en/i.test(v.lang)&&/male|daniel|david|george|guy|uk|arthur/i.test(v.name)) || voices.find(v=>/en/i.test(v.lang)) || voices[0] || null; }
+  function speak(text){ if(!tts||!('speechSynthesis' in window)) return; window.speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(String(text).replace(/stanley/g,'Stanley')); u.rate=0.95; u.pitch=0.9; u.volume=1; const v=pickVoice(); if(v) u.voice=v; window.speechSynthesis.speak(u); }
+  function setLine(text,sub){ lineEl.classList.add('swap'); setTimeout(()=>{ lineEl.textContent=text; subEl.textContent=sub||'the narrator is watching'; lineEl.classList.remove('swap'); },120); speak(text); }
+  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+  function shuffle(arr){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+  function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
+
+  function difficulty(){ return clamp((round-1)/16, 0, 1); }
+  function roundTime(base){ let t = Math.max(2100, Math.round(base * (1 - difficulty()*0.38))); if (slowRounds>0) t = Math.round(t*1.3); return t; }
+  function shouldIntroduceLingering(){ return memoryDeck.length>0 && round>=3 && !lastWasLingeringIntro && (round===3 || round%4===0); }
+  function activeBoostCount(){ return (slowRounds>0?1:0)+(doubleRounds>0?1:0)+(streakLockRounds>0?1:0)+(hintBoostRounds>0?1:0); }
+
+  function updateHud(){
+    hudRound.textContent=String(round); hudScore.textContent=String(score);
+    hudStrikes.textContent=`${strikes} / 3`; hudStreak.textContent=String(streak);
+    hudNoted.textContent=String(activeMemories.length); hudShield.textContent=String(shields);
+    document.getElementById('mScore').textContent=String(score);
+    document.getElementById('mStreak').textContent=String(bestStreak);
+    document.getElementById('mRound').textContent=String(round);
+    document.getElementById('shopScore').textContent=String(score);
+    document.getElementById('shopShield').textContent=String(shields);
+    document.getElementById('shopBoosts').textContent=String(activeBoostCount());
+    renderShop();
+  }
+  function setMeter(frac){ const f=Math.max(0,Math.min(1,frac)); meter.style.transform=`scaleX(${f})`; meter.style.background=f<0.25?'linear-gradient(90deg,#b85042,#d46b5a)':'linear-gradient(90deg,var(--gold),#e4bf68)'; }
+  function setButtonMode(mode){ button.classList.remove('good','bad','wait'); if(mode) button.classList.add(mode); }
+
+  function clearAmbient(){ ambient={spiders:0,moon:false,purple:false,dont:false,skull:false,cat:false,shh:false}; ambientEl.querySelectorAll('.spider,.skull,.cat').forEach(n=>n.remove()); moonEl.classList.remove('on'); dontSignEl.classList.remove('on'); shhSignEl.classList.remove('on'); document.body.classList.remove('purple'); }
+  function placeIcon(cls, txt, count){ for(let i=0;i<count;i++){ const s=document.createElement('div'); s.className=cls; s.textContent=txt; const side=Math.random()<0.5?'left':'right'; s.style.left=(side==='left'?(4+Math.random()*24):(68+Math.random()*24))+'%'; s.style.top=(12+Math.random()*72)+'%'; s.style.animationDelay=(Math.random()*1.5)+'s'; s.style.fontSize=(22+Math.random()*12)+'px'; ambientEl.appendChild(s); } }
+  function renderAmbient(){ ambientEl.querySelectorAll('.spider,.skull,.cat').forEach(n=>n.remove()); placeIcon('spider','🕷',ambient.spiders); if(ambient.skull) placeIcon('skull','💀',1); if(ambient.cat) placeIcon('cat','🐈',1); moonEl.classList.toggle('on',!!ambient.moon); dontSignEl.classList.toggle('on',!!ambient.dont); shhSignEl.classList.toggle('on',!!ambient.shh); document.body.classList.toggle('purple',!!ambient.purple); }
+  function randomizeAmbient(){ clearAmbient(); const d=difficulty(); if(activeMemories.some(m=>m.id==='spiders-even')) ambient.spiders=Math.floor(Math.random()*(d>0.6?8:6)); if(activeMemories.some(m=>m.id==='moon-only')) ambient.moon=Math.random()<(0.45+d*0.1); if(activeMemories.some(m=>m.id==='no-purple')) ambient.purple=Math.random()<(0.28+d*0.18); if(activeMemories.some(m=>m.id==='dont-sign')) ambient.dont=Math.random()<(0.22+d*0.16); if(activeMemories.some(m=>m.id==='no-skull')) ambient.skull=Math.random()<(0.25+d*0.15); if(activeMemories.some(m=>m.id==='cat-only')) ambient.cat=Math.random()<(0.45+d*0.1); if(activeMemories.some(m=>m.id==='shh-sign')) ambient.shh=Math.random()<(0.22+d*0.14); renderAmbient(); }
+  function memoryViolations(){ const v=[]; for(const m of activeMemories){ if(m.checkPress){ const msg=m.checkPress(ambient,{pressCount,round,rule}); if(msg) v.push(msg); } } return v; }
+  function pressingBlocked(){ return memoryViolations().length>0; }
+  function ruleNeedsPress(r){ return r && ['once','thrice','four','five','even','double','after2','last2','seven','green','go','nogo','pushit'].includes(r.id); }
+  function ambientAllowsPress(){ return !pressingBlocked(); }
+  function makeAmbientPressCompatible(){
+    if(activeMemories.some(m=>m.id==='spiders-even') && ambient.spiders % 2 !== 0) ambient.spiders = Math.max(0, ambient.spiders - 1);
+    if(activeMemories.some(m=>m.id==='moon-only')) ambient.moon = true;
+    if(activeMemories.some(m=>m.id==='no-purple')) ambient.purple = false;
+    if(activeMemories.some(m=>m.id==='dont-sign')) ambient.dont = false;
+    if(activeMemories.some(m=>m.id==='no-skull')) ambient.skull = false;
+    if(activeMemories.some(m=>m.id==='cat-only')) ambient.cat = true;
+    if(activeMemories.some(m=>m.id==='shh-sign')) ambient.shh = false;
+    renderAmbient();
+  }
+
+  function makeMemoryRules(){
+    return [
+      { id:'spiders-even', introText:'from now on, only press the button when there is an even number of spiders on screen.', introHint:'this round costs you nothing. the narrator will not bring this up again.', checkPress(a){ return (a.spiders%2===0)?null:`there were ${a.spiders} spider${a.spiders===1?'':'s'} on screen. odd. you should have been paying attention.`; } },
+      { id:'moon-only', introText:'from now on, only press the button when the tiny moon is visible in the corner.', introHint:'free pass. if the moon is gone, your finger stays put.', checkPress(a){ return a.moon?null:'no moon in the corner. you pressed anyway. unfortunate.'; } },
+      { id:'no-purple', introText:'from now on, never press the button while the room has a purple glow.', introHint:'free pass. purple room means no press. the narrator will not remind you.', checkPress(a){ return a.purple?'the room was purple. you had been warned, in a manner of speaking.':null; } },
+      { id:'dont-sign', introText:"from now on, if you see a DON'T sign, do not press the button.", introHint:'free pass. the sign is literal. the narrator will not repeat himself.', checkPress(a){ return a.dont?"the DON'T sign was right there. in red. practically screaming.":null; } },
+      { id:'no-skull', introText:'from now on, never press the button when a skull appears on screen.', introHint:'free pass. skull means bad idea. remember that when it matters.', checkPress(a){ return a.skull?'a skull was on screen. universally a bad sign. you pressed anyway.':null; } },
+      { id:'cat-only', introText:'from now on, only press the button when the cat is on screen.', introHint:'free pass. no cat, no press. the cat is in charge now.', checkPress(a){ return a.cat?null:'no cat on screen. the cat did not approve that press.'; } },
+      { id:'shh-sign', introText:'from now on, if you see a SHH sign, do not press the button.', introHint:'free pass. silence is a rule. the narrator expects you to keep up.', checkPress(a){ return a.shh?'the SHH sign was there. you were supposed to be quiet. with your hands.':null; } }
+    ];
+  }
+
+  function makeRules(){
+    return [
+      { id:'dont', label:'patience test', baseTime:3600, text:'do not press the button.', hint:'yes, really. hands off. keyboard off. inner chaos off.', setup(){ setButtonMode('wait'); }, onPress(){ fail('you pressed the button. the one thing you were not supposed to do.'); }, onTimeout(){ pass('you did nothing. beautifully, perfectly nothing.'); } },
+      { id:'once', label:'precision test', baseTime:5200, text:'press the button exactly once.', hint:'one press. not two. not a panic spam. one.', setup(){ setButtonMode(''); }, onPress(){ if(pressCount===1){ ruleState.textContent='one press registered...'; ruleHint.textContent='now wait. prove you can stop.'; } else fail('that was more than once. stanley discovered enthusiasm.'); }, onTimeout(){ if(pressCount===1) pass('exactly once. restraint! from stanley!'); else fail('time ran out. you were supposed to press it once.'); } },
+      { id:'thrice', label:'counting test', baseTime:6200, text:'press the button exactly three times.', hint:'count carefully. the narrator can hear you miscounting.', setup(){ setButtonMode(''); ruleHint.textContent='0 / 3 presses'; }, onPress(){ ruleHint.textContent=`${pressCount} / 3 presses`; if(pressCount>3) fail('too many presses. you overshot simple arithmetic.'); }, onTimeout(){ if(pressCount===3) pass('three presses. counted correctly. civilization survives another day.'); else fail(`you ended on ${pressCount}. the target was three.`); } },
+      { id:'four', label:'counting test+', baseTime:6800, text:'press the button exactly four times.', hint:'four. not three. not five. four.', setup(){ setButtonMode(''); ruleHint.textContent='0 / 4 presses'; }, onPress(){ ruleHint.textContent=`${pressCount} / 4 presses`; if(pressCount>4) fail('too many. four was the number. four.'); }, onTimeout(){ if(pressCount===4) pass('four presses. you can count. barely, but you can.'); else fail(`you ended on ${pressCount}. the target was four.`); } },
+      { id:'five', label:'counting test++', baseTime:7600, text:'press the button exactly five times.', hint:'five presses. the narrator believes in you. barely.', setup(){ setButtonMode(''); ruleHint.textContent='0 / 5 presses'; }, onPress(){ ruleHint.textContent=`${pressCount} / 5 presses`; if(pressCount>5) fail('too many presses. five. it was five.'); }, onTimeout(){ if(pressCount===5) pass('five presses. counted under pressure. impressive.'); else fail(`you ended on ${pressCount}. the target was five.`); } },
+      { id:'green', label:'signal test', baseTime:9000, text:'wait for green, then press the button.', hint:'red means no. green means yes. this is not complicated.', setup(){ signal='red'; setButtonMode('wait'); ruleHint.textContent='signal: RED'; const flipAt=roundTime(1800)+Math.random()*roundTime(2200); rule.flipTimer=setTimeout(()=>{ if(gameOver||locked||!rule||rule.id!=='green')return; signal='green'; setButtonMode('good'); ruleHint.textContent='signal: GREEN - now!'; setLine('green. now, stanley. press it now.','the signal is green'); },flipAt); }, cleanup(){ clearTimeout(rule.flipTimer); }, onPress(){ if(signal==='green') pass('green light, correct press. simple, elegant, rare.'); else fail('it was red. red means stop. this is traffic law and also common sense.'); }, onTimeout(){ if(signal!=='green') fail('you waited so long the signal got bored.'); else fail('green was there. you missed it.'); } },
+      { id:'go', label:'listening test', baseTime:9200, text:'press only when the narrator says "GO".', hint:'ignore fakeouts. the narrator would never lie. probably.', setup(){ goSaid=false; setButtonMode('wait'); ruleHint.textContent='listen carefully...'; fakeGoTimer=setTimeout(()=>{ if(gameOver||locked||!rule||rule.id!=='go')return; ruleHint.textContent='did he say it? no. he did not.'; setLine('get ready... get set... g... granola.','that was not go'); }, roundTime(1200)+Math.random()*roundTime(900)); realGoTimer=setTimeout(()=>{ if(gameOver||locked||!rule||rule.id!=='go')return; goSaid=true; setButtonMode('good'); ruleHint.textContent='GO!'; setLine('GO. press it, stanley!','that one was real'); }, roundTime(3800)+Math.random()*roundTime(1400)); }, cleanup(){ clearTimeout(fakeGoTimer); clearTimeout(realGoTimer); }, onPress(){ if(goSaid) pass('you waited for GO. ears: functional.'); else fail('that was not GO. you jumped the gun.'); }, onTimeout(){ fail('i said GO and you just... sat there. fascinating.'); } },
+      { id:'even', label:'math test', baseTime:7200, text:'press the button an even number of times.', hint:'2, 4, 6... you get the idea. zero is not going to save you.', setup(){ setButtonMode(''); ruleHint.textContent='presses: 0 (even, but finish the job)'; }, onPress(){ const even=pressCount%2===0; ruleHint.textContent=`presses: ${pressCount} (${even?'even':'odd'})`; }, onTimeout(){ if(pressCount>0 && pressCount%2===0) pass(`${pressCount} presses. even. mathematically acceptable.`); else fail(pressCount===0?'zero presses is not the move here.':'odd number. math remains undefeated.'); } },
+      { id:'after2', label:'restraint test', baseTime:6200, text:'wait at least 2 seconds, then press the button once.', hint:'too early = wrong. too many = wrong. patience, then action.', setup(){ setButtonMode('wait'); ruleHint.textContent='wait for it...'; rule.readyTimer=setTimeout(()=>{ if(gameOver||locked||!rule||rule.id!=='after2')return; setButtonMode('good'); ruleHint.textContent='okay, now you can press.'; },2000); }, cleanup(){ clearTimeout(rule.readyTimer); }, onPress(){ const elapsed=performance.now()-roundStart; if(elapsed<2000) fail('too early. the button did not say "now".'); else if(pressCount>1) fail('once. i said once. the waiting was the hard part and you still messed up.'); else ruleHint.textContent='good timing... now don\'t press again.'; }, onTimeout(){ if(pressCount===1 && (lastPressAt-roundStart)>=2000) pass('waited, pressed once. self-control unlocked.'); else fail('you either pressed too early, too much, or not at all. impressive spread.'); } },
+      { id:'last2', label:'clutch test', baseTime:6500, text:'press the button once, but only in the final 2 seconds.', hint:'wait. wait longer. then panic accurately.', setup(){ setButtonMode('wait'); ruleHint.textContent='too early...'; rule.winTimer=setTimeout(()=>{ if(gameOver||locked||!rule||rule.id!=='last2')return; setButtonMode('good'); ruleHint.textContent='FINAL 2 SECONDS - NOW'; }, Math.max(1500,timerMs-2000)); }, cleanup(){ clearTimeout(rule.winTimer); }, onPress(){ const left=timerMs-(performance.now()-roundStart); if(left>2000) fail('too early. you jumped the gun by a whole eternity.'); else if(pressCount>1) fail('once. just once. clutch, not chaos.'); else ruleHint.textContent='clutch press registered...'; }, onTimeout(){ const leftAtPress=timerMs-(lastPressAt-roundStart); if(pressCount===1 && leftAtPress<=2000) pass('clutch timing. the narrator hates to admit it.'); else fail('final 2 seconds. that was the window. you missed it.'); } },
+      { id:'seven', label:'timing test', baseTime:9000, text:'press the button when the counter shows 7.', hint:'the counter is moving. do not blink. do not be stanley.', setup(){ counterNum=1; setButtonMode('wait'); ruleHint.textContent='counter: 1'; counterTimer=setInterval(()=>{ if(gameOver||locked||!rule||rule.id!=='seven')return; counterNum=counterNum>=9?1:counterNum+1; ruleHint.textContent=`counter: ${counterNum}`; setButtonMode(counterNum===7?'good':'wait'); }, Math.max(320,560-difficulty()*180)); }, cleanup(){ clearInterval(counterTimer); }, onPress(){ if(counterNum===7) pass('seven on the dot. suspiciously competent.'); else fail(`it was showing ${counterNum}. seven. the number seven.`); }, onTimeout(){ fail('the counter counted. you did not.'); } },
+      { id:'double', label:'rhythm test', baseTime:6200, text:'press the button exactly twice, with a pause between presses.', hint:'two presses. not a double-click panic. give it a beat.', setup(){ setButtonMode(''); ruleHint.textContent='0 / 2 presses'; }, onPress(){ ruleHint.textContent=`${pressCount} / 2 presses`; if(pressCount===2){ const gap=lastPressAt-(rule.firstPressAt||0); rule.lastGap=gap; if(gap<260) fail('that was a double-click, not two deliberate presses. calm down.'); else ruleHint.textContent='2 / 2 presses... hold...'; } else if(pressCount>2) fail('too many. you had two jobs.'); if(pressCount===1) rule.firstPressAt=lastPressAt; }, onTimeout(){ if(pressCount===2){ const gap=rule.lastGap||(lastPressAt-(rule.firstPressAt||0)); if(gap<260) fail('too fast. that was button mashing wearing a trench coat.'); else pass('two clean presses. rhythm accepted.'); } else fail(`ended with ${pressCount} press(es). needed two.`); } },
+      { id:'pushit', label:'label test', baseTime:7600, text:'press the button only when it says "PUSH IT".', hint:'the button will lie by existing. wait for the words.', setup(){ setButtonMode('wait'); button.textContent='wait'; ruleHint.textContent='not yet...'; rule.pushTimer=setTimeout(()=>{ if(gameOver||locked||!rule||rule.id!=='pushit')return; button.textContent='PUSH IT'; setButtonMode('good'); ruleHint.textContent='NOW'; }, roundTime(2500)+Math.random()*roundTime(2200)); }, cleanup(){ clearTimeout(rule.pushTimer); button.textContent='push me'; }, onPress(){ if(button.textContent==='PUSH IT') pass('you pressed when it said PUSH IT. literacy wins.'); else fail('it did not say PUSH IT yet. reading is fundamental.'); }, onTimeout(){ if(button.textContent==='PUSH IT') fail('it said PUSH IT and you just stared at it. incredible.'); else fail('the moment never came. or you missed it. either way, no.'); } },
+      { id:'nogo', label:'reverse psychology test', baseTime:5200, text:'press the button, but only after the narrator changes his mind.', hint:'wait for the contradiction. it is coming. it always comes.', setup(){ signal='wait'; setButtonMode('wait'); ruleHint.textContent='do not press yet...'; rule.mindTimer=setTimeout(()=>{ if(gameOver||locked||!rule||rule.id!=='nogo')return; signal='go'; setButtonMode('good'); ruleText.textContent='actually, yes. press it. press it now.'; ruleHint.textContent='the narrator changed his mind. hurry.'; setLine('actually, press it. immediately. i have changed my mind.','contradiction deployed'); }, roundTime(1800)+Math.random()*roundTime(1200)); }, cleanup(){ clearTimeout(rule.mindTimer); }, onPress(){ if(signal==='go') pass('you waited for the inevitable contradiction. well played.'); else fail("i hadn't changed my mind yet! stanley, please."); }, onTimeout(){ fail('i changed my mind and you ignored me. now i feel things.'); } }
+    ];
+  }
+
+  function makeMemoryIntro(memory){
+    return {
+      id:'memory-intro-'+memory.id, memoryIntro:true, memory, label:'special instruction', baseTime:5200,
+      text:memory.introText, hint:memory.introHint,
+      setup(){ setButtonMode('wait'); ruleHint.textContent=memory.introHint; },
+      onPress(){ ruleHint.textContent='no need to press. just take note. seriously.'; },
+      onTimeout(){ activeMemories.push(memory); updateHud(); pass('noted. the narrator will not be bringing that up again.'); }
+    };
+  }
+
+  function nextRule(){
+    if(gameOver) return;
+    randomizeAmbient();
+    if(shouldIntroduceLingering()){
+      const mem = memoryDeck.shift();
+      rule = makeMemoryIntro(mem);
+      lastWasLingeringIntro = true;
+    } else {
+      if(deck.length===0) deck = shuffle(makeRules());
+      rule = deck.pop();
+      rule.time = roundTime(rule.baseTime);
+      lastWasLingeringIntro = false;
+    }
+    if(rule.memoryIntro) rule.time = rule.baseTime; else rule.time = rule.time || roundTime(rule.baseTime||5000);
+    if(!rule.memoryIntro && ruleNeedsPress(rule) && !ambientAllowsPress()){
+      let ok=false;
+      for(let i=0;i<14 && !ok;i++){ randomizeAmbient(); ok=ambientAllowsPress(); }
+      if(!ok) makeAmbientPressCompatible();
+    }
+
+    pressCount=0; signal='idle'; goSaid=false; lastPressAt=0; locked=false;
+    roundStart=performance.now(); timerMs=rule.time; timerLeft=timerMs;
+    ruleLabel.textContent=`round ${round}: ${rule.label}`;
+    ruleState.textContent='active'; ruleText.textContent=rule.text;
+    ruleHint.textContent = rule.hint || '';
+    if(hintBoostRounds>0 && rule.hint) ruleHint.textContent = 'HINT+: ' + rule.hint;
+    setButtonMode(''); setMeter(1); updateHud();
+    if(rule.setup) rule.setup();
+    setLine(rule.text, rule.memoryIntro ? 'take note. this will matter later.' : (ruleHint.textContent || 'follow the instruction'));
+    cancelAnimationFrame(raf);
+    if(!paused) raf=requestAnimationFrame(tick);
+  }
+
+  function endRound(success,msg){
+    if(locked||gameOver) return;
+    locked=true; cancelAnimationFrame(raf);
+    if(rule && rule.cleanup) rule.cleanup();
+    setMeter(0);
+    if(success){
+      let gain = 100 + streak*25 + Math.floor(difficulty()*45);
+      if(doubleRounds>0) gain *= 2;
+      score += gain; streak++; bestStreak=Math.max(bestStreak,streak);
+      if(slowRounds>0) slowRounds--; if(doubleRounds>0) doubleRounds--; if(streakLockRounds>0) streakLockRounds--; if(hintBoostRounds>0) hintBoostRounds--;
+      ruleState.textContent='passed'; setButtonMode('good'); setLine(msg||pick(passLines), 'rule cleared');
+    } else {
+      if(shields>0){ shields--; ruleState.textContent='shielded'; setButtonMode('wait'); setLine('the shield absorbed that failure. the narrator is furious.', 'shield consumed'); updateHud(); locked=false; setTimeout(()=>{ if(!gameOver) nextRule(); }, 1300); return; }
+      strikes++; if(streakLockRounds>0){ streakLockRounds--; } else { streak=0; }
+      ruleState.textContent='failed'; setButtonMode('bad'); setLine(msg||pick(failLines), `strike ${strikes} of 3`);
+    }
+    updateHud();
+    if(strikes>=3){
+      gameOver=true; ruleLabel.textContent='game over'; ruleText.textContent=`final score: ${score}. stanley has been relieved of button duty.`; ruleHint.textContent='open menu or reset to disappoint the narrator again.'; ruleState.textContent='terminated'; setButtonMode('bad');
+      setLine(`three strikes. final score ${score}. the button is safe from stanley. for now.`,'game over');
+      startBtn.textContent='play again'; showMenu(false);
+      return;
+    }
+    round++;
+    setTimeout(()=>{ if(!gameOver) nextRule(); }, 1600);
+  }
+  function pass(msg){ endRound(true,msg); }
+  function fail(msg){ endRound(false,msg); }
+
+  function tick(now){
+    if(paused||locked||gameOver||!rule) return;
+    const elapsed = now-roundStart;
+    timerLeft = Math.max(0, timerMs-elapsed);
+    setMeter(timerLeft/timerMs);
+    ruleState.textContent = `${(timerLeft/1000).toFixed(1)}s`;
+    if(rule.onTick) rule.onTick(elapsed,timerLeft);
+    if(timerLeft<=0){ if(rule.onTimeout) rule.onTimeout(); else fail('time ran out.'); return; }
+    raf = requestAnimationFrame(tick);
+  }
+
+  function doPress(){
+    if(paused||gameOver||locked||!rule) return;
+    pressCount++; lastPressAt=performance.now();
+    button.classList.add('pressed'); setTimeout(()=>button.classList.remove('pressed'),90);
+    if(!rule.memoryIntro){ const violations=memoryViolations(); if(violations.length){ fail(violations[0]); return; } }
+    if(rule.onPress) rule.onPress();
+  }
+
+  // shop
+  const SHOP_ITEMS = [
+    {id:'shield', name:'Failure Shield', desc:'Blocks the next strike. The narrator calls this cheating. He is correct.', cost:2600, buy(){ if(shields>=3) return 'max 3 shields'; shields++; return 'shield acquired. cowardice purchased.'; }},
+    {id:'heal', name:'Strike Repair', desc:'Remove one strike. Expensive regret eraser.', cost:3200, buy(){ if(strikes<=0) return 'no strikes to repair'; strikes--; return 'one strike erased. history rewritten.'; }},
+    {id:'slow', name:'Time Dilator', desc:'Next 3 rounds get 30% more time. For slow brains under pressure.', cost:2400, buy(){ slowRounds+=3; return 'time dilated. reality mildly inconvenienced.'; }},
+    {id:'double', name:'Score Doubler', desc:'Double score for next 3 passed rounds. High risk, high greed.', cost:3600, buy(){ doubleRounds+=3; return 'double score active. do not waste it.'; }},
+    {id:'streak', name:'Streak Lock', desc:'Next failure keeps your streak. Denial as a service.', cost:2800, buy(){ streakLockRounds+=3; return 'streak lock loaded. consequences delayed.'; }},
+    {id:'hint', name:'Narrator Clarity', desc:'Clearer hints for 5 rounds. The narrator hates being helpful.', cost:2200, buy(){ hintBoostRounds+=5; return 'clarity purchased. the narrator sighs.'; }}
+  ];
+  function renderShop(){
+    shopGrid.innerHTML='';
+    SHOP_ITEMS.forEach(item=>{
+      const can = score>=item.cost;
+      const el=document.createElement('div'); el.className='shopItem';
+      el.innerHTML=`<h3>${item.name}</h3><p>${item.desc}</p><div class="shopMeta"><span>${item.cost} score</span><button class="buyBtn" ${can?'':'disabled'}>buy</button></div>`;
+      el.querySelector('.buyBtn').addEventListener('click',()=>buyItem(item.id));
+      shopGrid.appendChild(el);
+    });
+  }
+  function buyItem(id){
+    const item=SHOP_ITEMS.find(i=>i.id===id); if(!item) return;
+    if(score<item.cost){ shopNote.textContent='not enough score. be better at pressing.'; return; }
+    score-=item.cost;
+    const msg=item.buy();
+    shopNote.textContent=msg;
+    setLine(msg,'shop transaction approved');
+    updateHud();
+  }
+
+  // menu/nav
+  function showScreen(name){
+    document.querySelectorAll('.panelScreen').forEach(s=>s.classList.remove('show'));
+    document.querySelectorAll('.menuNav button').forEach(b=>b.classList.toggle('active', b.dataset.screen===name));
+    const el=document.getElementById('screen'+name.charAt(0).toUpperCase()+name.slice(1));
+    if(el) el.classList.add('show');
+    if(name==='shop') renderShop();
+  }
+  function showMenu(showSettings){
+    paused=true; pauseStartedAt=performance.now(); cancelAnimationFrame(raf);
+    overlay.classList.add('show');
+    showScreen(showSettings?'settings':'main');
+    startBtn.textContent = gameStarted ? (gameOver ? 'play again' : 'resume') : 'start game';
+    document.getElementById('menuHeading').textContent = gameStarted ? (gameOver ? 'Game Over' : 'Paused') : 'Main Menu';
+    document.getElementById('menuSub').textContent = gameOver ? `final score ${score}. the button won.` : (gameStarted ? 'game paused. the narrator is judging you in silence.' : 'press start. follow instructions. make the narrator regret everything.');
+    updateHud();
+  }
+  function hideMenu(){
+    if(!gameStarted){ startGame(); return; }
+    if(gameOver){ overlay.classList.remove('show'); return; }
+    overlay.classList.remove('show');
+    if(paused && pauseStartedAt){
+      const pausedFor = performance.now()-pauseStartedAt;
+      roundStart += pausedFor;
+      lastPressAt = lastPressAt ? lastPressAt + pausedFor : 0;
+      paused=false; pauseStartedAt=0;
+      if(!locked) raf=requestAnimationFrame(tick);
+    }
+  }
+  function resetRun(){
+    cancelAnimationFrame(raf); if(rule && rule.cleanup) rule.cleanup();
+    round=1; score=0; strikes=0; streak=0; bestStreak=0; gameOver=false; gameStarted=true;
+    shields=0; slowRounds=0; doubleRounds=0; streakLockRounds=0; hintBoostRounds=0;
+    activeMemories=[]; memoryDeck=shuffle(makeMemoryRules()); deck=shuffle(makeRules()); lastWasLingeringIntro=false;
+    clearAmbient(); updateHud(); paused=false; pauseStartedAt=0; overlay.classList.remove('show');
+    setLine('new game. same button. same disappointing protagonist. try to keep up.', 'run reset');
+    nextRule();
+  }
+  function startGame(){ if(gameOver||!gameStarted){ resetRun(); return; } hideMenu(); }
+
+  // events
+  button.addEventListener('click', doPress);
+  document.addEventListener('keydown', (e)=>{
+    if(e.code==='Escape'){ e.preventDefault(); if(overlay.classList.contains('show')) hideMenu(); else showMenu(false); return; }
+    if(e.code==='Space'||e.code==='Enter'){ if(overlay.classList.contains('show')) return; const tag=(document.activeElement&&document.activeElement.tagName||'').toLowerCase(); if(tag==='button'&&document.activeElement!==button) return; e.preventDefault(); doPress(); }
+  });
+  menuBtn.addEventListener('click', ()=>showMenu(false));
+  startBtn.addEventListener('click', ()=>{ if(gameStarted&&!gameOver) hideMenu(); else resetRun(); });
+  menuResetBtn.addEventListener('click', resetRun);
+  resetBtn.addEventListener('click', resetRun);
+  overlay.addEventListener('click', (e)=>{ if(e.target===overlay && gameStarted) hideMenu(); });
+  document.querySelectorAll('.menuNav button[data-screen]').forEach(btn=>btn.addEventListener('click', ()=>showScreen(btn.dataset.screen)));
+  document.getElementById('settingsCloseBtn').addEventListener('click', ()=>showScreen('main'));
+
+  window.__sbMenu = ()=>showMenu(false);
+  window.__sbStart = ()=>{ if(gameStarted&&!gameOver) hideMenu(); else resetRun(); };
+  window.__sbReset = resetRun;
+  window.__sbSettingsClose = ()=>showScreen('main');
+  window.__sbNav = (n)=>showScreen(n);
+
+  ttsToggle.checked = tts;
+  ttsToggle.addEventListener('change', ()=>{ tts=!!ttsToggle.checked; localStorage.setItem(LS_TTS,tts?'1':'0'); if(tts) speak(lineEl.textContent); else if('speechSynthesis' in window) window.speechSynthesis.cancel(); });
+  voiceSelect.addEventListener('change', ()=>{ selectedVoiceName=voiceSelect.value||''; localStorage.setItem(LS_VOICE,selectedVoiceName); if(tts) speak('narrator voice selected.'); });
+  if('speechSynthesis' in window){ refreshVoiceSelect(); window.speechSynthesis.getVoices(); window.speechSynthesis.onvoiceschanged=()=>refreshVoiceSelect(); } else { refreshVoiceSelect(); voiceSelect.disabled=true; }
+
+  // init
+  memoryDeck = shuffle(makeMemoryRules());
+  deck = shuffle(makeRules());
+  updateHud();
+  renderShop();
+  showMenu(false);
+})();
+</script>
+</body>
+</html>
