@@ -99,6 +99,12 @@
   .menuActions button,.primaryAction{appearance:none;border:1px solid rgba(239,230,210,.18);background:rgba(239,230,210,.05);color:var(--paper);padding:12px 16px;font:14px/1 Consolas,monospace;cursor:pointer;text-transform:uppercase;letter-spacing:.06em}
   .menuActions button:hover,.primaryAction:hover{background:rgba(239,230,210,.12)}
   .primaryAction{border-color:rgba(199,154,59,.45);color:var(--gold);background:rgba(199,154,59,.08)}
+  body.reduced-motion *,body.reduced-motion *::before,body.reduced-motion *::after{animation:none !important;transition:none !important;scroll-behavior:auto !important}
+  body.big-text{font-size:18px}
+  body.big-text .ruleText{font-size:clamp(24px,3vw,36px)}
+  body.big-text .menuNav button,body.big-text .menuActions button,body.big-text .primaryAction{font-size:16px}
+  body.high-contrast{--edge:rgba(255,245,220,.35);--paper:#fff8e8}
+  body.high-contrast .menuPanel,body.high-contrast .ruleCard,body.high-contrast .narrator,body.high-contrast .hud div,body.high-contrast .shopItem,body.high-contrast .statCard{border-color:rgba(255,245,220,.35)!important}
 
   @media (max-width:900px){.menuShell{grid-template-columns:1fr;}.menuBrand{position:static;padding-top:0}.shopGrid{grid-template-columns:1fr}}
   @media (max-width:760px){.hud{grid-template-columns:repeat(3,minmax(0,1fr))}.ruleCard{text-align:center}.ruleTop{flex-direction:column}.statGrid{grid-template-columns:1fr 1fr}}
@@ -118,7 +124,7 @@
     <div>strikes<b id="hudStrikes">0 / 3</b></div>
     <div>streak<b id="hudStreak">0</b></div>
     <div>noted<b id="hudNoted">0</b></div>
-    <div>shield<b id="hudShield">0</b></div>
+    <div>tools<b id="hudTools">S0 / K0 / R0</b></div>
   </section>
 
   <section class="ruleCard">
@@ -139,6 +145,8 @@
     </div>
     <div class="button-wrap"><button id="theButton" type="button">push me</button></div>
     <div class="controls">
+      <button class="ctl" id="skipBtn" type="button" onclick="window.__sbSkip&&window.__sbSkip()">skip</button>
+      <button class="ctl" id="rerollBtn" type="button" onclick="window.__sbReroll&&window.__sbReroll()">reroll</button>
       <button class="ctl" id="menuBtn" type="button" onclick="window.__sbMenu&&window.__sbMenu()">menu</button>
       <button class="ctl" id="resetBtn" type="button" onclick="window.__sbReset&&window.__sbReset()">reset game</button>
     </div>
@@ -155,6 +163,7 @@
       <nav class="menuNav">
         <button class="active" data-screen="main" id="navMain">Main Menu</button>
         <button data-screen="shop" id="navShop">Shop</button>
+        <button data-screen="stats" id="navStats">Stats</button>
         <button data-screen="settings" id="navSettings">Settings</button>
         <button data-screen="updates" id="navUpdates">Updates</button>
         <button data-screen="credits" id="navCredits">Credits</button>
@@ -171,6 +180,7 @@
         </div>
         <div class="menuActions">
           <button class="primaryAction" id="startBtn" type="button" onclick="window.__sbStart&&window.__sbStart()">start game</button>
+          <button id="dailyBtn" type="button" onclick="window.__sbDaily&&window.__sbDaily()">daily challenge</button>
           <button id="menuResetBtn" type="button" onclick="window.__sbReset&&window.__sbReset()">new run</button>
         </div>
       </div>
@@ -187,6 +197,17 @@
         <div class="shopNote" id="shopNote">the narrator does not endorse capitalism. he does endorse survival.</div>
       </div>
 
+      <div class="panelScreen" id="screenStats">
+        <h2>Stats & Codex</h2>
+        <p>numbers the narrator wishes you hadn't earned.</p>
+        <div class="statGrid" id="statsGrid"></div>
+        <div style="margin-top:18px;border:1px solid rgba(239,230,210,.12);background:rgba(0,0,0,.18);padding:14px">
+          <div style="font:12px/1 Consolas,monospace;color:#a89774;text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">rule codex</div>
+          <div id="codexList" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;font:12px/1.6 Consolas,monospace;color:#b9ab91"></div>
+        </div>
+        <div class="menuActions"><button class="primaryAction" onclick="window.__sbNav&&window.__sbNav('main')">back</button></div>
+      </div>
+
       <div class="panelScreen" id="screenSettings">
         <h2>Settings</h2>
         <p>configure the narrator. he already has opinions about this.</p>
@@ -197,6 +218,11 @@
         <div class="field">
           <label for="voiceSelect">narrator voice</label>
           <select id="voiceSelect"></select>
+        </div>
+        <div class="field"><label>accessibility</label>
+          <div class="toggleRow"><span>reduced motion</span><input id="a11yMotion" type="checkbox"></div>
+          <div class="toggleRow" style="margin-top:8px"><span>big text</span><input id="a11yText" type="checkbox"></div>
+          <div class="toggleRow" style="margin-top:8px"><span>high contrast</span><input id="a11yContrast" type="checkbox"></div>
         </div>
         <div class="field" style="margin-top:22px;padding-top:18px;border-top:1px solid rgba(239,230,210,.1)">
           <label for="musicEnabled">void records music</label>
@@ -260,7 +286,7 @@
   const hudStrikes = document.getElementById('hudStrikes');
   const hudStreak = document.getElementById('hudStreak');
   const hudNoted = document.getElementById('hudNoted');
-  const hudShield = document.getElementById('hudShield');
+  const hudTools = document.getElementById('hudTools');
   const ruleLabel = document.getElementById('ruleLabel');
   const ruleState = document.getElementById('ruleState');
   const ruleText = document.getElementById('ruleText');
@@ -292,12 +318,36 @@
   const LS_MUSIC_ON = 'stanley_music_on';
   const LS_MUSIC_BASE = 'stanley_music_base';
   const LS_MUSIC_VOL = 'stanley_music_vol';
+  const LS_META = 'stanley_meta';
+  const LS_A11Y = 'stanley_a11y';
 
   let tts = localStorage.getItem(LS_TTS) === '1';
   let selectedVoiceName = localStorage.getItem(LS_VOICE) || '';
   let musicEnabled = localStorage.getItem(LS_MUSIC_ON) === '1';
   let musicBase = (localStorage.getItem(LS_MUSIC_BASE) || '').trim();
   let musicVol = Math.max(0, Math.min(100, parseInt(localStorage.getItem(LS_MUSIC_VOL) || '35', 10) || 35));
+  let meta = loadMeta();
+  let a11y = loadA11y();
+  let dailyMode = false;
+  let dailySeed = '';
+  let rng = Math.random;
+
+  function defaultMeta(){ return { bestScore:0,bestStreak:0,runs:0,totalRounds:0,totalPass:0,totalFail:0,totalPresses:0,shopBuys:0,ach:{} , seenRules:{} }; }
+  function loadMeta(){ try{ return { ...defaultMeta(), ...(JSON.parse(localStorage.getItem(LS_META)||'{}')||{}) }; }catch{ return defaultMeta(); } }
+  function saveMeta(){ localStorage.setItem(LS_META, JSON.stringify(meta)); }
+  function defaultA11y(){ return { reducedMotion:false, bigText:false, highContrast:false }; }
+  function loadA11y(){ try{ return { ...defaultA11y(), ...(JSON.parse(localStorage.getItem(LS_A11Y)||'{}')||{}) }; }catch{ return defaultA11y(); } }
+  function saveA11y(){ localStorage.setItem(LS_A11Y, JSON.stringify(a11y)); applyA11y(); }
+  function applyA11y(){
+    document.body.classList.toggle('reduced-motion', !!a11y.reducedMotion);
+    document.body.classList.toggle('big-text', !!a11y.bigText);
+    document.body.classList.toggle('high-contrast', !!a11y.highContrast);
+  }
+  function seededRng(seedStr){
+    let h=2166136261>>>0; for(let i=0;i<seedStr.length;i++){ h^=seedStr.charCodeAt(i); h=Math.imul(h,16777619); }
+    return function(){ h += 0x6D2B79F5; let t=Math.imul(h^h>>>15,1|h); t ^= t + Math.imul(t^t>>>7,61|t); return ((t^t>>>14)>>>0)/4294967296; };
+  }
+  function todaySeed(){ const d=new Date(); return `daily-${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
   let round = 1, score = 0, strikes = 0, streak = 0, bestStreak = 0;
   let gameOver = false, gameStarted = false, paused = true, pauseStartedAt = 0;
   let rule = null, deck = [], memoryDeck = [], activeMemories = [], lastWasLingeringIntro = false;
@@ -305,6 +355,7 @@
   let signal = 'red', goSaid = false, fakeGoTimer = 0, realGoTimer = 0, counterNum = 0, counterTimer = 0, lastPressAt = 0;
   let ambient = { spiders: 0, moon: false, purple: false, dont: false, skull: false, cat: false, shh: false };
   let shields = 0, slowRounds = 0, doubleRounds = 0, streakLockRounds = 0, hintBoostRounds = 0;
+  let skipCharges = 0, rerollCharges = 0;
 
   const passLines = ['correct. stanley followed instructions. mark the calendar.','astonishing. he did the thing he was told to do.','the narrator is pleasantly surprised and immediately suspicious.','yes! that was it. do not let it go to your head, stanley.','a flawless performance. the bar was on the floor, but still.'];
   const failLines = ['no. no, that was not it. stanley, were you listening at all?','the narrator gave one instruction. one. incredible.','stanley pressed the button with confidence and incorrectness.','wrong. profoundly, unmistakably wrong.','that was almost right in the way that a fire is almost a swimming pool.'];
@@ -314,8 +365,8 @@
   function pickVoice(){ const voices=availableVoices(); if(selectedVoiceName){ const exact=voices.find(v=>v.name===selectedVoiceName); if(exact) return exact; } return voices.find(v=>/en/i.test(v.lang)&&/male|daniel|david|george|guy|uk|arthur/i.test(v.name)) || voices.find(v=>/en/i.test(v.lang)) || voices[0] || null; }
   function speak(text){ if(!tts||!('speechSynthesis' in window)) return; window.speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(String(text).replace(/stanley/g,'Stanley')); u.rate=0.95; u.pitch=0.9; u.volume=1; const v=pickVoice(); if(v) u.voice=v; window.speechSynthesis.speak(u); }
   function setLine(text,sub){ lineEl.classList.add('swap'); setTimeout(()=>{ lineEl.textContent=text; subEl.textContent=sub||'the narrator is watching'; lineEl.classList.remove('swap'); },120); speak(text); }
-  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
-  function shuffle(arr){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+  function pick(arr){ return arr[Math.floor(rng()*arr.length)]; }
+  function shuffle(arr){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(rng()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
   function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
 
   // void records music
@@ -431,14 +482,15 @@
   function updateHud(){
     hudRound.textContent=String(round); hudScore.textContent=String(score);
     hudStrikes.textContent=`${strikes} / 3`; hudStreak.textContent=String(streak);
-    hudNoted.textContent=String(activeMemories.length); hudShield.textContent=String(shields);
+    hudNoted.textContent=String(activeMemories.length); hudTools.textContent=`S${shields} / K${skipCharges} / R${rerollCharges}`;
     document.getElementById('mScore').textContent=String(score);
     document.getElementById('mStreak').textContent=String(bestStreak);
     document.getElementById('mRound').textContent=String(round);
     document.getElementById('shopScore').textContent=String(score);
-    document.getElementById('shopShield').textContent=String(shields);
+    const ss=document.getElementById('shopShield'); if(ss) ss.textContent=String(shields);
     document.getElementById('shopBoosts').textContent=String(activeBoostCount());
     renderShop();
+    renderStats();
   }
   function setMeter(frac){ const f=Math.max(0,Math.min(1,frac)); meter.style.transform=`scaleX(${f})`; meter.style.background=f<0.25?'linear-gradient(90deg,#b85042,#d46b5a)':'linear-gradient(90deg,var(--gold),#e4bf68)'; }
   function setButtonMode(mode){ button.classList.remove('good','bad','wait'); if(mode) button.classList.add(mode); }
@@ -525,15 +577,27 @@
 
     pressCount=0; signal='idle'; goSaid=false; lastPressAt=0; locked=false;
     roundStart=performance.now(); timerMs=rule.time; timerLeft=timerMs;
-    ruleLabel.textContent=`round ${round}: ${rule.label}`;
+    ruleLabel.textContent=`round ${round}: ${rule.label}${dailyMode?' [daily]':''}`;
     ruleState.textContent='active'; ruleText.textContent=rule.text;
     ruleHint.textContent = rule.hint || '';
     if(hintBoostRounds>0 && rule.hint) ruleHint.textContent = 'HINT+: ' + rule.hint;
     setButtonMode(''); setMeter(1); updateHud();
     if(rule.setup) rule.setup();
+    if(rule.id && !rule.memoryIntro) { meta.seenRules = meta.seenRules || {}; meta.seenRules[rule.id]=true; saveMeta(); }
     setLine(rule.text, rule.memoryIntro ? 'take note. this will matter later.' : (ruleHint.textContent || 'follow the instruction'));
     cancelAnimationFrame(raf);
     if(!paused) raf=requestAnimationFrame(tick);
+  }
+
+  function checkAchievements(){
+    const a = meta.ach || (meta.ach={});
+    const grant = (id)=>{ if(!a[id]){ a[id]=Date.now(); saveMeta(); } };
+    if(meta.totalPass>=1) grant('first-pass');
+    if(meta.bestStreak>=5) grant('streak5');
+    if(meta.bestScore>=5000) grant('score5k');
+    if(meta.totalRounds>=50) grant('rounds50');
+    if(meta.shopBuys>=3) grant('shopper');
+    if(dailyMode && gameOver) grant('daily-attempt');
   }
 
   function endRound(success,msg){
@@ -541,20 +605,25 @@
     locked=true; cancelAnimationFrame(raf);
     if(rule && rule.cleanup) rule.cleanup();
     setMeter(0);
+    meta.totalRounds = (meta.totalRounds||0)+1;
     if(success){
+      meta.totalPass = (meta.totalPass||0)+1;
       let gain = 100 + streak*25 + Math.floor(difficulty()*45);
       if(doubleRounds>0) gain *= 2;
       score += gain; streak++; bestStreak=Math.max(bestStreak,streak);
+      meta.bestScore=Math.max(meta.bestScore||0,score); meta.bestStreak=Math.max(meta.bestStreak||0,bestStreak);
       if(slowRounds>0) slowRounds--; if(doubleRounds>0) doubleRounds--; if(streakLockRounds>0) streakLockRounds--; if(hintBoostRounds>0) hintBoostRounds--;
       ruleState.textContent='passed'; setButtonMode('good'); setLine(msg||pick(passLines), 'rule cleared');
     } else {
-      if(shields>0){ shields--; ruleState.textContent='shielded'; setButtonMode('wait'); setLine('the shield absorbed that failure. the narrator is furious.', 'shield consumed'); updateHud(); locked=false; setTimeout(()=>{ if(!gameOver) nextRule(); }, 1300); return; }
+      if(shields>0){ shields--; ruleState.textContent='shielded'; setButtonMode('wait'); setLine('the shield absorbed that failure. the narrator is furious.', 'shield consumed'); updateHud(); locked=false; setTimeout(()=>{ if(!gameOver) nextRule(); }, 1300); saveMeta(); return; }
+      meta.totalFail = (meta.totalFail||0)+1;
       strikes++; if(streakLockRounds>0){ streakLockRounds--; } else { streak=0; }
       ruleState.textContent='failed'; setButtonMode('bad'); setLine(msg||pick(failLines), `strike ${strikes} of 3`);
     }
-    updateHud();
+    saveMeta(); checkAchievements(); updateHud();
     if(strikes>=3){
-      gameOver=true; ruleLabel.textContent='game over'; ruleText.textContent=`final score: ${score}. stanley has been relieved of button duty.`; ruleHint.textContent='open menu or reset to disappoint the narrator again.'; ruleState.textContent='terminated'; setButtonMode('bad');
+      gameOver=true; meta.runs=(meta.runs||0)+1; saveMeta(); checkAchievements();
+      ruleLabel.textContent='game over'; ruleText.textContent=`final score: ${score}. stanley has been relieved of button duty.`; ruleHint.textContent='open menu or reset to disappoint the narrator again.'; ruleState.textContent='terminated'; setButtonMode('bad');
       setLine(`three strikes. final score ${score}. the button is safe from stanley. for now.`,'game over');
       startBtn.textContent='play again'; showMenu(false);
       return;
@@ -578,10 +647,22 @@
 
   function doPress(){
     if(paused||gameOver||locked||!rule) return;
-    pressCount++; lastPressAt=performance.now();
+    pressCount++; meta.totalPresses=(meta.totalPresses||0)+1; lastPressAt=performance.now();
     button.classList.add('pressed'); setTimeout(()=>button.classList.remove('pressed'),90);
     if(!rule.memoryIntro){ const violations=memoryViolations(); if(violations.length){ fail(violations[0]); return; } }
     if(rule.onPress) rule.onPress();
+  }
+
+  function useSkip(){
+    if(paused||gameOver||locked||!rule||skipCharges<=0) { if(skipCharges<=0) setLine('no skip tokens. the narrator smiles.', 'shop required'); return; }
+    skipCharges--; setLine('rule skipped. the narrator pretends this did not happen.', 'skip token used');
+    round++; nextRule(); updateHud();
+  }
+  function useReroll(){
+    if(paused||gameOver||locked||!rule||rerollCharges<=0) { if(rerollCharges<=0) setLine('no reroll tokens. suffer as intended.', 'shop required'); return; }
+    rerollCharges--; setLine('rerolling reality. please hold.', 'reroll token used');
+    if(rule && rule.cleanup) rule.cleanup();
+    nextRule(); updateHud();
   }
 
   // shop
@@ -591,12 +672,15 @@
     {id:'slow', name:'Time Dilator', desc:'Next 3 rounds get 30% more time. For slow brains under pressure.', cost:2400, buy(){ slowRounds+=3; return 'time dilated. reality mildly inconvenienced.'; }},
     {id:'double', name:'Score Doubler', desc:'Double score for next 3 passed rounds. High risk, high greed.', cost:3600, buy(){ doubleRounds+=3; return 'double score active. do not waste it.'; }},
     {id:'streak', name:'Streak Lock', desc:'Next failure keeps your streak. Denial as a service.', cost:2800, buy(){ streakLockRounds+=3; return 'streak lock loaded. consequences delayed.'; }},
-    {id:'hint', name:'Narrator Clarity', desc:'Clearer hints for 5 rounds. The narrator hates being helpful.', cost:2200, buy(){ hintBoostRounds+=5; return 'clarity purchased. the narrator sighs.'; }}
+    {id:'hint', name:'Narrator Clarity', desc:'Clearer hints for 5 rounds. The narrator hates being helpful.', cost:2200, buy(){ hintBoostRounds+=5; return 'clarity purchased. the narrator sighs.'; }},
+    {id:'skip', name:'Skip Token', desc:'Skip the current rule with no penalty. Very expensive mercy.', cost:4200, buy(){ skipCharges++; return 'skip token acquired. cowardice upgraded.'; }},
+    {id:'reroll', name:'Reroll Token', desc:'Reroll the current rule/ambient. Expensive chaos control.', cost:3000, buy(){ rerollCharges++; return 'reroll token acquired. reality may be shuffled.'; }}
   ];
   const UPDATE_LOG = [
     { date:'2026-11-22', title:'initial release', items:['rule-based button game with narrator','special lingering instructions, strikes, streaks, scoring','game menu with settings and credits'] },
     { date:'2026-11-22', title:'menu, shop, more rules', items:['full-screen game menu','shop with expensive score boosts','more normal rules and special instructions','fixed impossible memory/press rule combos'] },
-    { date:'2026-11-22', title:'music bridge', items:['void-records-server music player in settings','base URL, volume, prev/play/next, now playing','mixed-content warning for https pages using http localhost'] }
+    { date:'2026-11-22', title:'music bridge', items:['void-records-server music player in settings','base URL, volume, prev/play/next, now playing','mixed-content warning for https pages using http localhost'] },
+    { date:'2026-11-22', title:'massive feature pack', items:['daily seeded challenge mode','stats/codex screen + persistent meta','achievements tracking','accessibility settings (reduced motion, big text, high contrast)','shop: skip/reroll tokens and in-run skip/reroll controls'] }
   ];
   function renderUpdates(){
     const el = document.getElementById('updateLog');
@@ -609,6 +693,20 @@
         </div>
         <ul style="margin:0;padding-left:18px;color:#b9ab91;font:13px/1.7 Consolas,monospace">${u.items.map(i=>`<li>${i}</li>`).join('')}</ul>
       </div>`).join('');
+  }
+
+  function renderStats(){
+    const g = document.getElementById('statsGrid'); const c = document.getElementById('codexList');
+    if(g) g.innerHTML = [
+      ['best score', meta.bestScore||0], ['best streak', meta.bestStreak||0], ['runs', meta.runs||0],
+      ['rounds', meta.totalRounds||0], ['passes', meta.totalPass||0], ['fails', meta.totalFail||0],
+      ['presses', meta.totalPresses||0], ['shop buys', meta.shopBuys||0], ['daily seed', dailyMode ? dailySeed : todaySeed()]
+    ].map(([k,v])=>`<div class="statCard"><div class="k">${k}</div><div class="v" style="font-size:${String(v).length>8?'18px':'28px'}">${v}</div></div>`).join('');
+    if(c){
+      const seen = meta.seenRules||{};
+      const defs = [...makeRules().map(r=>({id:r.id,label:r.label,text:r.text,type:'rule'})), ...makeMemoryRules().map(r=>({id:'m-'+r.id,label:'special',text:r.introText,type:'special'}))];
+      c.innerHTML = defs.map(d=>`<div style="border:1px solid rgba(239,230,210,.08);padding:8px;background:rgba(255,255,255,.02)"><span style="color:${(d.type==='special'?seen[d.id.replace('m-','')]:seen[d.id])?'#c79a3b':'#665f55'}">${(d.type==='special'?seen[d.id.replace('m-','')]:seen[d.id])?'●':'○'}</span> <span style="color:#d8ccb7">${d.label}</span><div style="color:#8f8577">${d.text}</div></div>`).join('');
+    }
   }
 
   function renderShop(){
@@ -626,6 +724,7 @@
     if(score<item.cost){ shopNote.textContent='not enough score. be better at pressing.'; return; }
     score-=item.cost;
     const msg=item.buy();
+    meta.shopBuys=(meta.shopBuys||0)+1; saveMeta(); checkAchievements();
     shopNote.textContent=msg;
     setLine(msg,'shop transaction approved');
     updateHud();
@@ -639,6 +738,7 @@
     if(el) el.classList.add('show');
     if(name==='shop') renderShop();
     if(name==='updates') renderUpdates();
+    if(name==='stats') renderStats();
   }
   function showMenu(showSettings){
     paused=true; pauseStartedAt=performance.now(); cancelAnimationFrame(raf);
@@ -661,16 +761,19 @@
       if(!locked) raf=requestAnimationFrame(tick);
     }
   }
-  function resetRun(){
+  function resetRun(isDaily=false){
     cancelAnimationFrame(raf); if(rule && rule.cleanup) rule.cleanup();
+    dailyMode = !!isDaily; dailySeed = dailyMode ? todaySeed() : '';
+    rng = dailyMode ? seededRng(dailySeed) : Math.random;
     round=1; score=0; strikes=0; streak=0; bestStreak=0; gameOver=false; gameStarted=true;
-    shields=0; slowRounds=0; doubleRounds=0; streakLockRounds=0; hintBoostRounds=0;
+    shields=0; slowRounds=0; doubleRounds=0; streakLockRounds=0; hintBoostRounds=0; skipCharges=0; rerollCharges=0;
     activeMemories=[]; memoryDeck=shuffle(makeMemoryRules()); deck=shuffle(makeRules()); lastWasLingeringIntro=false;
     clearAmbient(); updateHud(); paused=false; pauseStartedAt=0; overlay.classList.remove('show');
-    setLine('new game. same button. same disappointing protagonist. try to keep up.', 'run reset');
+    setLine(dailyMode ? `daily challenge loaded (${dailySeed}). same seed for everyone today.` : 'new game. same button. same disappointing protagonist. try to keep up.', dailyMode ? 'daily challenge' : 'run reset');
     nextRule();
   }
-  function startGame(){ if(gameOver||!gameStarted){ resetRun(); return; } hideMenu(); }
+  function startGame(){ if(gameOver||!gameStarted){ resetRun(dailyMode); return; } hideMenu(); }
+  function startDaily(){ resetRun(true); }
 
   // events
   button.addEventListener('click', doPress);
@@ -679,16 +782,21 @@
     if(e.code==='Space'||e.code==='Enter'){ if(overlay.classList.contains('show')) return; const tag=(document.activeElement&&document.activeElement.tagName||'').toLowerCase(); if(tag==='button'&&document.activeElement!==button) return; e.preventDefault(); doPress(); }
   });
   menuBtn.addEventListener('click', ()=>showMenu(false));
-  startBtn.addEventListener('click', ()=>{ if(gameStarted&&!gameOver) hideMenu(); else resetRun(); });
-  menuResetBtn.addEventListener('click', resetRun);
-  resetBtn.addEventListener('click', resetRun);
+  startBtn.addEventListener('click', ()=>{ if(gameStarted&&!gameOver) hideMenu(); else resetRun(dailyMode); });
+  menuResetBtn.addEventListener('click', ()=>resetRun(false));
+  resetBtn.addEventListener('click', ()=>resetRun(dailyMode));
   overlay.addEventListener('click', (e)=>{ if(e.target===overlay && gameStarted) hideMenu(); });
   document.querySelectorAll('.menuNav button[data-screen]').forEach(btn=>btn.addEventListener('click', ()=>showScreen(btn.dataset.screen)));
   document.getElementById('settingsCloseBtn').addEventListener('click', ()=>showScreen('main'));
+  document.getElementById('skipBtn').addEventListener('click', useSkip);
+  document.getElementById('rerollBtn').addEventListener('click', useReroll);
 
   window.__sbMenu = ()=>showMenu(false);
-  window.__sbStart = ()=>{ if(gameStarted&&!gameOver) hideMenu(); else resetRun(); };
-  window.__sbReset = resetRun;
+  window.__sbStart = ()=>{ if(gameStarted&&!gameOver) hideMenu(); else resetRun(dailyMode); };
+  window.__sbDaily = ()=>startDaily();
+  window.__sbSkip = ()=>useSkip();
+  window.__sbReroll = ()=>useReroll();
+  window.__sbReset = ()=>resetRun(dailyMode);
   window.__sbSettingsClose = ()=>showScreen('main');
   window.__sbNav = (n)=>showScreen(n);
 
@@ -696,6 +804,11 @@
   ttsToggle.addEventListener('change', ()=>{ tts=!!ttsToggle.checked; localStorage.setItem(LS_TTS,tts?'1':'0'); if(tts) speak(lineEl.textContent); else if('speechSynthesis' in window) window.speechSynthesis.cancel(); });
   voiceSelect.addEventListener('change', ()=>{ selectedVoiceName=voiceSelect.value||''; localStorage.setItem(LS_VOICE,selectedVoiceName); if(tts) speak('narrator voice selected.'); });
   if('speechSynthesis' in window){ refreshVoiceSelect(); window.speechSynthesis.getVoices(); window.speechSynthesis.onvoiceschanged=()=>refreshVoiceSelect(); } else { refreshVoiceSelect(); voiceSelect.disabled=true; }
+  const a11yMotion=document.getElementById('a11yMotion'), a11yText=document.getElementById('a11yText'), a11yContrast=document.getElementById('a11yContrast');
+  if(a11yMotion){ a11yMotion.checked=!!a11y.reducedMotion; a11yMotion.addEventListener('change',()=>{a11y.reducedMotion=!!a11yMotion.checked; saveA11y();}); }
+  if(a11yText){ a11yText.checked=!!a11y.bigText; a11yText.addEventListener('change',()=>{a11y.bigText=!!a11yText.checked; saveA11y();}); }
+  if(a11yContrast){ a11yContrast.checked=!!a11y.highContrast; a11yContrast.addEventListener('change',()=>{a11y.highContrast=!!a11yContrast.checked; saveA11y();}); }
+  applyA11y();
 
   musicEnabledEl.checked = musicEnabled;
   musicBaseEl.value = musicBase;
