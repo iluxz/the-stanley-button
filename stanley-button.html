@@ -588,7 +588,7 @@
       ruleHint.textContent = rule.hint || '';
       setButtonMode(''); setMeter(1); updateHud();
       if(rule.setup) rule.setup();
-      setLine(rule.narrator || rule.text, 'tutorial');
+      setLine(rule.narrator || rule.text, rule.hint || 'tutorial');
       cancelAnimationFrame(raf);
       if(!paused) raf=requestAnimationFrame(tick);
       return;
@@ -811,12 +811,12 @@
   function finishTutorial(){ finishTutorialRun(false); }
   function startTutorial(){
     cancelAnimationFrame(raf); if(rule && rule.cleanup) rule.cleanup();
+    if(!tts && 'speechSynthesis' in window){ tts = true; localStorage.setItem(LS_TTS,'1'); if(ttsToggle) ttsToggle.checked=true; }
     tutorialMode = true; tutorialStep = 0; dailyMode = false; dailySeed=''; rng = Math.random;
     round=1; score=0; strikes=0; streak=0; bestStreak=0; gameOver=false; gameStarted=true;
     shields=0; slowRounds=0; doubleRounds=0; streakLockRounds=0; hintBoostRounds=0; skipCharges=0; rerollCharges=0;
     activeMemories=[]; memoryDeck=[]; deck=[]; lastWasLingeringIntro=false;
     clearAmbient(); updateHud(); paused=false; pauseStartedAt=0; overlay.classList.remove('show');
-    setLine('Tutorial engaged. Please attempt to follow simple instructions.', 'tutorial');
     nextRule();
   }
   function finishTutorialRun(completed){
