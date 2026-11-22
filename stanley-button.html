@@ -182,6 +182,22 @@
           <button class="primaryAction" id="startBtn" type="button" onclick="window.__sbStart&&window.__sbStart()">start game</button>
           <button id="dailyBtn" type="button" onclick="window.__sbDaily&&window.__sbDaily()">daily challenge</button>
           <button id="menuResetBtn" type="button" onclick="window.__sbReset&&window.__sbReset()">new run</button>
+          <button id="tutorialBtn" type="button" onclick="window.__sbTutorial&&window.__sbTutorial()">tutorial</button>
+        </div>
+      </div>
+
+      <div class="panelScreen" id="screenTutorial">
+        <h2>Tutorial</h2>
+        <p>quick orientation before the narrator gets mean.</p>
+        <div id="tutorialCard" style="border:1px solid rgba(199,154,59,.28);background:linear-gradient(180deg,rgba(199,154,59,.09),rgba(0,0,0,.12));padding:20px;min-height:220px">
+          <div id="tutStep" style="font:12px/1 Consolas,monospace;color:#a89774;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px">step 1 / 5</div>
+          <div id="tutTitle" style="font:28px/1.2 Georgia,serif;color:#f0e4ca;margin-bottom:10px"></div>
+          <div id="tutBody" style="font:14px/1.8 Consolas,monospace;color:#b9ab91"></div>
+        </div>
+        <div class="menuActions">
+          <button id="tutPrev" type="button">prev</button>
+          <button class="primaryAction" id="tutNext" type="button">next</button>
+          <button id="tutSkip" type="button" onclick="window.__sbTutorialDone&&window.__sbTutorialDone()">skip/finish</button>
         </div>
       </div>
 
@@ -332,7 +348,7 @@
   let dailySeed = '';
   let rng = Math.random;
 
-  function defaultMeta(){ return { bestScore:0,bestStreak:0,runs:0,totalRounds:0,totalPass:0,totalFail:0,totalPresses:0,shopBuys:0,ach:{} , seenRules:{} }; }
+  function defaultMeta(){ return { bestScore:0,bestStreak:0,runs:0,totalRounds:0,totalPass:0,totalFail:0,totalPresses:0,shopBuys:0,ach:{} , seenRules:{}, tutorialDone:false }; }
   function loadMeta(){ try{ return { ...defaultMeta(), ...(JSON.parse(localStorage.getItem(LS_META)||'{}')||{}) }; }catch{ return defaultMeta(); } }
   function saveMeta(){ localStorage.setItem(LS_META, JSON.stringify(meta)); }
   function defaultA11y(){ return { reducedMotion:false, bigText:false, highContrast:false }; }
@@ -680,7 +696,8 @@
     { date:'2026-11-22', title:'initial release', items:['rule-based button game with narrator','special lingering instructions, strikes, streaks, scoring','game menu with settings and credits'] },
     { date:'2026-11-22', title:'menu, shop, more rules', items:['full-screen game menu','shop with expensive score boosts','more normal rules and special instructions','fixed impossible memory/press rule combos'] },
     { date:'2026-11-22', title:'music bridge', items:['void-records-server music player in settings','base URL, volume, prev/play/next, now playing','mixed-content warning for https pages using http localhost'] },
-    { date:'2026-11-22', title:'massive feature pack', items:['daily seeded challenge mode','stats/codex screen + persistent meta','achievements tracking','accessibility settings (reduced motion, big text, high contrast)','shop: skip/reroll tokens and in-run skip/reroll controls'] }
+    { date:'2026-11-22', title:'massive feature pack', items:['daily seeded challenge mode','stats/codex screen + persistent meta','achievements tracking','accessibility settings (reduced motion, big text, high contrast)','shop: skip/reroll tokens and in-run skip/reroll controls'] },
+    { date:'2026-11-22', title:'first-time tutorial', items:['tutorial screen with 5 quick steps','auto-shows for first-time players','tutorial button in main menu, skip/finish persists'] }
   ];
   function renderUpdates(){
     const el = document.getElementById('updateLog');
@@ -693,6 +710,33 @@
         </div>
         <ul style="margin:0;padding-left:18px;color:#b9ab91;font:13px/1.7 Consolas,monospace">${u.items.map(i=>`<li>${i}</li>`).join('')}</ul>
       </div>`).join('');
+  }
+
+  const TUTORIAL_STEPS = [
+    { title:'The Button', body:'You get a rule. You decide: press the button, or do not press it. Sounds easy. The narrator disagrees.' },
+    { title:'Read Carefully', body:'Some rules are simple ("press the button"). Some are tricks ("do not press", "wait for green", "press twice with a pause"). The timer and hint are there to help - barely.' },
+    { title:'Special Instructions', body:'Sometimes the narrator gives a lingering instruction like "do not press the button when there are spiders." It stays active for future rounds. The narrator will not remind you. Remember it.' },
+    { title:'Strikes, Score, Tools', body:'3 strikes = game over. Passing gives score; streaks give more. Shop sells shields, repairs, boost, skip/reroll tokens. Use skip/reroll in-run when you panic.' },
+    { title:'Modes & Settings', body:'Daily Challenge is a seeded same-day run. Settings has TTS, void-records music, and accessibility. Stats/Codex tracks what you have seen. Now press start and disappoint the narrator.' }
+  ];
+  let tutIndex = 0;
+  function renderTutorial(){
+    const step = TUTORIAL_STEPS[tutIndex] || TUTORIAL_STEPS[0];
+    const s = document.getElementById('tutStep'); if(s) s.textContent = `step ${tutIndex+1} / ${TUTORIAL_STEPS.length}`;
+    const t = document.getElementById('tutTitle'); if(t) t.textContent = step.title;
+    const b = document.getElementById('tutBody'); if(b) b.textContent = step.body;
+    const prev = document.getElementById('tutPrev'); if(prev) prev.disabled = tutIndex===0;
+    const next = document.getElementById('tutNext'); if(next) next.textContent = tutIndex===TUTORIAL_STEPS.length-1 ? 'finish' : 'next';
+  }
+  function tutorialNext(){
+    if(tutIndex < TUTORIAL_STEPS.length-1){ tutIndex++; renderTutorial(); }
+    else finishTutorial();
+  }
+  function tutorialPrev(){ if(tutIndex>0){ tutIndex--; renderTutorial(); } }
+  function openTutorial(){ tutIndex=0; showMenu(false); showScreen('tutorial'); }
+  function finishTutorial(){
+    if(!meta.tutorialDone){ meta.tutorialDone = true; saveMeta(); }
+    showScreen('main');
   }
 
   function renderStats(){
@@ -739,11 +783,13 @@
     if(name==='shop') renderShop();
     if(name==='updates') renderUpdates();
     if(name==='stats') renderStats();
+    if(name==='tutorial') renderTutorial();
   }
   function showMenu(showSettings){
-    paused=true; pauseStartedAt=performance.now(); cancelAnimationFrame(raf);
+    if(gameStarted && !gameOver && !paused){ paused=true; pauseStartedAt=performance.now(); cancelAnimationFrame(raf); }
     overlay.classList.add('show');
-    showScreen(showSettings?'settings':'main');
+    const firstTime = !meta.tutorialDone && !gameStarted && !showSettings;
+    showScreen(showSettings ? 'settings' : (firstTime ? 'tutorial' : 'main'));
     startBtn.textContent = gameStarted ? (gameOver ? 'play again' : 'resume') : 'start game';
     document.getElementById('menuHeading').textContent = gameStarted ? (gameOver ? 'Game Over' : 'Paused') : 'Main Menu';
     document.getElementById('menuSub').textContent = gameOver ? `final score ${score}. the button won.` : (gameStarted ? 'game paused. the narrator is judging you in silence.' : 'press start. follow instructions. make the narrator regret everything.');
@@ -790,6 +836,8 @@
   document.getElementById('settingsCloseBtn').addEventListener('click', ()=>showScreen('main'));
   document.getElementById('skipBtn').addEventListener('click', useSkip);
   document.getElementById('rerollBtn').addEventListener('click', useReroll);
+  document.getElementById('tutNext').addEventListener('click', tutorialNext);
+  document.getElementById('tutPrev').addEventListener('click', tutorialPrev);
 
   window.__sbMenu = ()=>showMenu(false);
   window.__sbStart = ()=>{ if(gameStarted&&!gameOver) hideMenu(); else resetRun(dailyMode); };
@@ -799,6 +847,8 @@
   window.__sbReset = ()=>resetRun(dailyMode);
   window.__sbSettingsClose = ()=>showScreen('main');
   window.__sbNav = (n)=>showScreen(n);
+  window.__sbTutorial = ()=>openTutorial();
+  window.__sbTutorialDone = ()=>finishTutorial();
 
   ttsToggle.checked = tts;
   ttsToggle.addEventListener('change', ()=>{ tts=!!ttsToggle.checked; localStorage.setItem(LS_TTS,tts?'1':'0'); if(tts) speak(lineEl.textContent); else if('speechSynthesis' in window) window.speechSynthesis.cancel(); });
