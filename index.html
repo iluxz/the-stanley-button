@@ -807,6 +807,31 @@
     ];
   }
 
+  function openTutorial(){ startTutorial(); }
+  function finishTutorial(){ finishTutorialRun(false); }
+  function startTutorial(){
+    cancelAnimationFrame(raf); if(rule && rule.cleanup) rule.cleanup();
+    tutorialMode = true; tutorialStep = 0; dailyMode = false; dailySeed=''; rng = Math.random;
+    round=1; score=0; strikes=0; streak=0; bestStreak=0; gameOver=false; gameStarted=true;
+    shields=0; slowRounds=0; doubleRounds=0; streakLockRounds=0; hintBoostRounds=0; skipCharges=0; rerollCharges=0;
+    activeMemories=[]; memoryDeck=[]; deck=[]; lastWasLingeringIntro=false;
+    clearAmbient(); updateHud(); paused=false; pauseStartedAt=0; overlay.classList.remove('show');
+    setLine('Tutorial engaged. Please attempt to follow simple instructions.', 'tutorial');
+    nextRule();
+  }
+  function finishTutorialRun(completed){
+    cancelAnimationFrame(raf); if(rule && rule.cleanup) rule.cleanup();
+    tutorialMode = false; tutorialStep = 0;
+    if(!meta.tutorialDone){ meta.tutorialDone = true; saveMeta(); }
+    gameOver=false; gameStarted=false; locked=false; clearAmbient();
+    ruleLabel.textContent='the button is ready';
+    ruleText.textContent=completed ? 'tutorial complete. the real button awaits.' : 'tutorial skipped. confidence is not competence.';
+    ruleHint.textContent='open menu to start a real run.';
+    ruleState.textContent='ready'; setMeter(1); updateHud();
+    setLine(completed ? 'Training complete. Try not to embarrass yourself immediately.' : 'Tutorial skipped. The narrator has concerns.', 'tutorial complete');
+    showMenu(false);
+  }
+
   function renderStats(){
     const g = document.getElementById('statsGrid'); const c = document.getElementById('codexList');
     if(g) g.innerHTML = [
@@ -851,7 +876,7 @@
     if(name==='shop') renderShop();
     if(name==='updates') renderUpdates();
     if(name==='stats') renderStats();
-    if(name==='tutorial') renderTutorial();
+    if(name==='tutorial'){ /* screen is static launcher */ }
   }
   function showMenu(showSettings){
     if(gameStarted && !gameOver && !paused){ paused=true; pauseStartedAt=performance.now(); cancelAnimationFrame(raf); }
