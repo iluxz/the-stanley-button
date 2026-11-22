@@ -197,6 +197,30 @@
           <label for="voiceSelect">narrator voice</label>
           <select id="voiceSelect"></select>
         </div>
+        <div class="field" style="margin-top:22px;padding-top:18px;border-top:1px solid rgba(239,230,210,.1)">
+          <label for="musicEnabled">void records music</label>
+          <div class="toggleRow"><span>play music from void-records-server</span><input id="musicEnabled" type="checkbox"></div>
+        </div>
+        <div class="field">
+          <label for="musicBase">server base url</label>
+          <input id="musicBase" type="url" placeholder="https://your-tunnel.trycloudflare.com" style="width:100%;font:14px/1.4 Consolas,monospace;color:var(--paper);background:rgba(239,230,210,.05);border:1px solid var(--edge);padding:11px 12px">
+          <div id="musicWarn" style="margin-top:8px;color:#ffb3a9;font:12px/1.5 Consolas,monospace;display:none"></div>
+        </div>
+        <div class="field">
+          <label for="musicVol">music volume</label>
+          <div class="toggleRow"><input id="musicVol" type="range" min="0" max="100" value="35" style="width:100%;accent-color:var(--gold)"><span id="musicVolLabel" style="min-width:46px;text-align:right;font:12px/1 Consolas,monospace;color:#cfc2a5">35%</span></div>
+        </div>
+        <div class="field">
+          <label>now playing</label>
+          <div class="toggleRow" style="flex-direction:column;align-items:stretch;gap:10px">
+            <div id="musicNow" style="font:13px/1.5 Consolas,monospace;color:#cfc2a5;min-height:20px;word-break:break-word">music off</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button id="musicPrev" type="button" style="appearance:none;border:1px solid var(--edge);background:rgba(239,230,210,.05);color:var(--paper);padding:8px 12px;font:12px/1 Consolas,monospace;cursor:pointer">prev</button>
+              <button id="musicToggle" type="button" style="appearance:none;border:1px solid rgba(199,154,59,.4);background:rgba(199,154,59,.08);color:var(--gold);padding:8px 12px;font:12px/1 Consolas,monospace;cursor:pointer">play</button>
+              <button id="musicNext" type="button" style="appearance:none;border:1px solid var(--edge);background:rgba(239,230,210,.05);color:var(--paper);padding:8px 12px;font:12px/1 Consolas,monospace;cursor:pointer">next</button>
+            </div>
+          </div>
+        </div>
         <div class="menuActions">
           <button class="primaryAction" id="settingsCloseBtn" type="button" onclick="window.__sbSettingsClose&&window.__sbSettingsClose()">back to menu</button>
         </div>
@@ -243,14 +267,29 @@
   const menuResetBtn = document.getElementById('menuResetBtn');
   const ttsToggle = document.getElementById('ttsToggle');
   const voiceSelect = document.getElementById('voiceSelect');
+  const musicEnabledEl = document.getElementById('musicEnabled');
+  const musicBaseEl = document.getElementById('musicBase');
+  const musicWarnEl = document.getElementById('musicWarn');
+  const musicVolEl = document.getElementById('musicVol');
+  const musicVolLabel = document.getElementById('musicVolLabel');
+  const musicNowEl = document.getElementById('musicNow');
+  const musicPrevBtn = document.getElementById('musicPrev');
+  const musicToggleBtn = document.getElementById('musicToggle');
+  const musicNextBtn = document.getElementById('musicNext');
   const shopGrid = document.getElementById('shopGrid');
   const shopNote = document.getElementById('shopNote');
 
   const LS_TTS = 'stanley_tts';
   const LS_VOICE = 'stanley_tts_voice';
+  const LS_MUSIC_ON = 'stanley_music_on';
+  const LS_MUSIC_BASE = 'stanley_music_base';
+  const LS_MUSIC_VOL = 'stanley_music_vol';
 
   let tts = localStorage.getItem(LS_TTS) === '1';
   let selectedVoiceName = localStorage.getItem(LS_VOICE) || '';
+  let musicEnabled = localStorage.getItem(LS_MUSIC_ON) === '1';
+  let musicBase = (localStorage.getItem(LS_MUSIC_BASE) || '').trim();
+  let musicVol = Math.max(0, Math.min(100, parseInt(localStorage.getItem(LS_MUSIC_VOL) || '35', 10) || 35));
   let round = 1, score = 0, strikes = 0, streak = 0, bestStreak = 0;
   let gameOver = false, gameStarted = false, paused = true, pauseStartedAt = 0;
   let rule = null, deck = [], memoryDeck = [], activeMemories = [], lastWasLingeringIntro = false;
@@ -270,6 +309,111 @@
   function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
   function shuffle(arr){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
   function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
+
+  // void records music
+  const bgm = new Audio();
+  bgm.preload = 'auto';
+  bgm.crossOrigin = 'anonymous';
+  let musicQueue = [];
+  let musicHistory = [];
+  let musicIndex = -1;
+  let musicLoading = false;
+  let musicWantedPlay = false;
+
+  function normalizeMusicBase(v){
+    let s = String(v || '').trim();
+    if (!s) return '';
+    s = s.replace(/\/+$/, '');
+    return s;
+  }
+  function musicBaseValid(){
+    const base = normalizeMusicBase(musicBaseEl ? musicBaseEl.value : musicBase);
+    if (!base) return { ok:false, reason:'set a void-records-server base url (local http or https tunnel).' };
+    let u;
+    try { u = new URL(base); } catch { return { ok:false, reason:'invalid url. example: https://your-tunnel.trycloudflare.com' }; }
+    if (u.protocol !== 'http:' && u.protocol !== 'https:') return { ok:false, reason:'base url must be http or https.' };
+    if (location.protocol === 'https:' && u.protocol === 'http:') return { ok:false, reason:'this page is https, so http://localhost music is blocked by browser mixed-content. use an https tunnel/url, or run TSB over http locally.' };
+    return { ok:true, base: u.origin + u.pathname.replace(/\/+$/, '') };
+  }
+  function setMusicStatus(text, warn){
+    if (musicNowEl) musicNowEl.textContent = text;
+    if (musicWarnEl){ musicWarnEl.style.display = warn ? 'block' : 'none'; musicWarnEl.textContent = warn || ''; }
+    if (musicToggleBtn) musicToggleBtn.textContent = (!bgm.paused && !bgm.ended) ? 'pause' : 'play';
+  }
+  function syncMusicUi(){
+    if (musicEnabledEl) musicEnabledEl.checked = !!musicEnabled;
+    if (musicBaseEl && musicBaseEl.value !== musicBase) musicBaseEl.value = musicBase;
+    if (musicVolEl) musicVolEl.value = String(musicVol);
+    if (musicVolLabel) musicVolLabel.textContent = musicVol + '%';
+    bgm.volume = clamp(musicVol / 100, 0, 1);
+    const v = musicBaseValid();
+    if (!musicEnabled) setMusicStatus('music off');
+    else if (!v.ok) setMusicStatus('music enabled, waiting for valid server...', v.reason);
+    else if (!musicQueue[musicIndex]) setMusicStatus('ready - press play/next');
+  }
+  async function fetchRandomTrack(){
+    const v = musicBaseValid();
+    if (!v.ok) throw new Error(v.reason);
+    const res = await fetch(v.base + '/api/v1/random?n=1', { mode:'cors' });
+    if (!res.ok) throw new Error('random failed: ' + res.status);
+    const data = await res.json();
+    const t = Array.isArray(data) ? data[0] : (data && data.track ? data.track : data);
+    if (!t || !t.file) throw new Error('bad random response');
+    return { ...t, base: v.base, url: v.base + '/audio/' + encodeURIComponent(t.file) };
+  }
+  async function playMusicTrack(track, autoplay=true){
+    if (!track) return;
+    musicQueue[musicIndex] = track;
+    bgm.src = track.url;
+    bgm.volume = clamp(musicVol / 100, 0, 1);
+    const label = track.name || track.title || track.file || 'unknown track';
+    setMusicStatus((autoplay ? 'loading: ' : 'ready: ') + label);
+    if (autoplay){
+      musicWantedPlay = true;
+      try { await bgm.play(); setMusicStatus('playing: ' + label); }
+      catch (e){ setMusicStatus('could not autoplay: ' + label, 'browser blocked playback or source failed. click play.'); }
+    }
+  }
+  async function musicNext(autoplay=true){
+    if (musicLoading) return;
+    musicLoading = true;
+    try {
+      syncMusicUi();
+      const v = musicBaseValid();
+      if (!musicEnabled) { setMusicStatus('music off'); return; }
+      if (!v.ok) { setMusicStatus('music enabled, waiting for valid server...', v.reason); return; }
+      if (musicIndex < musicQueue.length - 1){
+        musicIndex++;
+        await playMusicTrack(musicQueue[musicIndex], autoplay);
+        return;
+      }
+      setMusicStatus('picking a random void record...');
+      const t = await fetchRandomTrack();
+      musicQueue.push(t);
+      musicIndex = musicQueue.length - 1;
+      if (musicQueue.length > 50){ const drop = musicQueue.length - 50; musicQueue.splice(0, drop); musicIndex -= drop; }
+      await playMusicTrack(t, autoplay);
+    } catch (e){
+      setMusicStatus('music error', String(e && e.message || e));
+    } finally { musicLoading = false; }
+  }
+  async function musicPrev(){
+    if (musicLoading) return;
+    if (musicIndex > 0){ musicIndex--; await playMusicTrack(musicQueue[musicIndex], true); }
+    else setMusicStatus('no previous track');
+  }
+  async function musicTogglePlay(){
+    const v = musicBaseValid();
+    if (!musicEnabled){ setMusicStatus('music off'); return; }
+    if (!v.ok){ setMusicStatus('music enabled, waiting for valid server...', v.reason); return; }
+    if (!bgm.src){ await musicNext(true); return; }
+    if (bgm.paused){ try { await bgm.play(); const t=musicQueue[musicIndex]; setMusicStatus('playing: ' + ((t&& (t.name||t.title||t.file))||'track')); } catch(e){ setMusicStatus('play failed', String(e&&e.message||e)); } }
+    else { bgm.pause(); const t=musicQueue[musicIndex]; setMusicStatus('paused: ' + ((t&& (t.name||t.title||t.file))||'track')); }
+  }
+  bgm.addEventListener('ended', ()=>{ if (musicEnabled) musicNext(true); });
+  bgm.addEventListener('error', ()=>{ if (musicEnabled) setMusicStatus('audio error - trying next track...', 'stream failed; skipping.'); if (musicEnabled) setTimeout(()=>musicNext(true), 350); });
+  bgm.addEventListener('play', ()=>{ const t=musicQueue[musicIndex]; if(t) setMusicStatus('playing: ' + (t.name||t.title||t.file||'track')); });
+  bgm.addEventListener('pause', ()=>{ if (bgm.src && !bgm.ended){ const t=musicQueue[musicIndex]; setMusicStatus('paused: ' + (t && (t.name||t.title||t.file) || 'track')); } });
 
   function difficulty(){ return clamp((round-1)/16, 0, 1); }
   function roundTime(base){ let t = Math.max(2100, Math.round(base * (1 - difficulty()*0.38))); if (slowRounds>0) t = Math.round(t*1.3); return t; }
@@ -525,6 +669,19 @@
   ttsToggle.addEventListener('change', ()=>{ tts=!!ttsToggle.checked; localStorage.setItem(LS_TTS,tts?'1':'0'); if(tts) speak(lineEl.textContent); else if('speechSynthesis' in window) window.speechSynthesis.cancel(); });
   voiceSelect.addEventListener('change', ()=>{ selectedVoiceName=voiceSelect.value||''; localStorage.setItem(LS_VOICE,selectedVoiceName); if(tts) speak('narrator voice selected.'); });
   if('speechSynthesis' in window){ refreshVoiceSelect(); window.speechSynthesis.getVoices(); window.speechSynthesis.onvoiceschanged=()=>refreshVoiceSelect(); } else { refreshVoiceSelect(); voiceSelect.disabled=true; }
+
+  musicEnabledEl.checked = musicEnabled;
+  musicBaseEl.value = musicBase;
+  musicVolEl.value = String(musicVol);
+  musicVolLabel.textContent = musicVol + '%';
+  bgm.volume = clamp(musicVol/100,0,1);
+  musicEnabledEl.addEventListener('change', ()=>{ musicEnabled = !!musicEnabledEl.checked; localStorage.setItem(LS_MUSIC_ON, musicEnabled?'1':'0'); if(!musicEnabled){ bgm.pause(); setMusicStatus('music off'); } else { syncMusicUi(); if(musicWantedPlay || bgm.src) musicTogglePlay(); } });
+  musicBaseEl.addEventListener('change', ()=>{ musicBase = normalizeMusicBase(musicBaseEl.value); musicBaseEl.value = musicBase; localStorage.setItem(LS_MUSIC_BASE, musicBase); musicQueue=[]; musicIndex=-1; bgm.pause(); bgm.removeAttribute('src'); bgm.load(); syncMusicUi(); if(musicEnabled) setMusicStatus('server changed - press play/next'); });
+  musicVolEl.addEventListener('input', ()=>{ musicVol = clamp(parseInt(musicVolEl.value||'35',10)||0,0,100); musicVolLabel.textContent = musicVol+'%'; bgm.volume = clamp(musicVol/100,0,1); localStorage.setItem(LS_MUSIC_VOL, String(musicVol)); });
+  musicNextBtn.addEventListener('click', ()=>musicNext(true));
+  musicPrevBtn.addEventListener('click', ()=>musicPrev());
+  musicToggleBtn.addEventListener('click', ()=>musicTogglePlay());
+  syncMusicUi();
 
   // init
   memoryDeck = shuffle(makeMemoryRules());
