@@ -60,10 +60,10 @@
   }
   .overlay.show{display:block}
   .ulysses-bg{position:absolute;inset:0;pointer-events:none;z-index:0;overflow:hidden;opacity:.18;user-select:none}
-  .ulysses-scroll{position:absolute;left:50%;top:0;width:min(980px,90vw);animation:ulyssesDown 180s linear infinite;will-change:transform}
-  .ulysses-text{font-family:Georgia,'Times New Roman',serif;font-size:clamp(13px,1.55vw,18px);line-height:1.95;color:#f0e4ca;text-align:justify;padding:28px 0;white-space:pre-wrap}
-  .ulysses-text p{margin:0 0 1em}
-  @keyframes ulyssesDown{from{transform:translateX(-50%) translateY(-50%)}to{transform:translateX(-50%) translateY(0)}}
+  .ulysses-scroll{position:absolute;left:0;top:0;width:100%;animation:ulyssesDown 180s linear infinite;will-change:transform}
+  .ulysses-text{font-family:Georgia,'Times New Roman',serif;font-size:clamp(13px,1.55vw,18px);line-height:1.7;color:#f0e4ca;text-align:justify;padding:0;margin:0;width:100%;text-indent:0;white-space:normal;overflow-wrap:anywhere}
+  .ulysses-text p{margin:0;padding:0;text-indent:0}
+  @keyframes ulyssesDown{from{transform:translateY(-50%)}to{transform:translateY(0)}}
   .menuShell{width:min(1100px,100%);min-height:100%;margin:0 auto;padding:40px 24px;display:grid;grid-template-columns:320px 1fr;gap:28px;align-items:start;position:relative;z-index:1}
   .menuBrand{padding:28px 10px 10px;position:sticky;top:20px}
   .menuEyebrow{font:12px/1 Consolas,monospace;color:#a89774;letter-spacing:.2em;text-transform:uppercase;margin-bottom:14px}
