@@ -8,332 +8,296 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23141311'/%3E%3Ccircle cx='32' cy='32' r='18' fill='%23a63a2b'/%3E%3Ccircle cx='26' cy='26' r='7' fill='%23d04a39' opacity='.9'/%3E%3C/svg%3E">
 <title>The Stanley Button</title>
 <style>
-  :root{
-    --bg:#0b0d10; --bg2:#12161b; --panel:#151a20; --panel2:#1b222b; --line:#273241;
-    --text:#eef3f7; --muted:#93a3b3; --dim:#68798a; --accent:#f2c14e; --accent2:#7bdff2;
-    --danger:#ff6b6b; --good:#63d297; --warn:#ffb454; --shadow:0 20px 60px rgba(0,0,0,.45);
-    --radius:18px;
-  }
-  *{box-sizing:border-box}
-  html,body{margin:0;min-height:100%;background:radial-gradient(1200px 700px at 20% -10%,#1a2430 0%,transparent 60%),radial-gradient(900px 600px at 100% 0%,#1a1f2a 0%,transparent 55%),var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
-  body{overflow-x:hidden}
-  body::before{content:"";position:fixed;inset:0;background:linear-gradient(rgba(255,255,255,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.02) 1px,transparent 1px);background-size:28px 28px;mask-image:linear-gradient(to bottom,rgba(0,0,0,.55),transparent);pointer-events:none}
-  button,input,select{font:inherit}
-  .shell{width:min(1280px,calc(100vw - 32px));margin:24px auto;display:grid;grid-template-columns:1.45fr .95fr;gap:18px}
-  .card{background:linear-gradient(180deg,rgba(255,255,255,.03),transparent 30%),var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);backdrop-filter:blur(6px)}
-  .topbar{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;padding:18px 22px;gap:16px}
-  .brand{display:flex;align-items:center;gap:14px}
-  .logo{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#ff8c42);display:grid;place-items:center;color:#14110a;font-weight:900;font-size:22px;box-shadow:0 8px 24px rgba(242,193,78,.25)}
-  .brand h1{margin:0;font-size:clamp(22px,3vw,34px);letter-spacing:-.03em;line-height:1}
-  .brand h1 span{color:var(--accent)}
-  .brand p{margin:4px 0 0;color:var(--muted);font-size:13px}
-  .status-pill{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;background:#10151b;border:1px solid var(--line);color:var(--muted);font-size:13px;white-space:nowrap}
-  .status-dot{width:8px;height:8px;border-radius:50%;background:var(--good);box-shadow:0 0 0 4px rgba(99,210,151,.12)}
-  .main{padding:22px;display:flex;flex-direction:column;gap:18px;min-height:720px}
-  .narrator{padding:20px;border-radius:16px;background:linear-gradient(180deg,rgba(123,223,242,.08),transparent 60%),#10161d;border:1px solid #294050;position:relative;overflow:hidden}
-  .narrator::after{content:"NARRATOR";position:absolute;top:14px;right:16px;font-size:11px;letter-spacing:.18em;color:#6aa7b7;font-weight:700}
-  .line{margin:0;font-size:clamp(22px,2.8vw,34px);line-height:1.3;letter-spacing:-.02em;max-width:900px;transition:opacity .18s,transform .18s}
+  :root{--bg:#141311;--paper:#efe6d2;--ink:#1e1b17;--muted:#655d52;--red:#a63a2b;--gold:#c79a3b;--good:#6f9b63;--bad:#c45a4a;--purple:#7b5ea7;--panel:#1b1916;--edge:rgba(239,230,210,.14)}
+  *{box-sizing:border-box} html,body{height:100%;margin:0}
+  body{min-height:100%;padding:24px;background:radial-gradient(circle at 50% 20%,#2b2823,#141311 62%);color:var(--paper);font-family:Georgia,"Times New Roman",serif;overflow-x:hidden;transition:background .5s,filter .4s}
+  body.purple{background:radial-gradient(circle at 50% 20%,#352a45,#171320 62%)}
+  .room{width:min(960px,100%);margin:0 auto;text-align:center;position:relative}
+  .narrator{min-height:132px;padding:24px 24px 18px;border:1px solid rgba(239,230,210,.18);background:rgba(0,0,0,.22);border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.35);margin-bottom:18px}
+  .line{font-size:clamp(22px,3.3vw,38px);line-height:1.35;margin:0;transition:opacity .2s ease,transform .2s ease}
   .line.swap{opacity:0;transform:translateY(6px)}
-  .sub{margin-top:12px;color:var(--muted);font-size:14px}
-  .hud{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
-  .hud .stat{padding:14px;border-radius:14px;background:var(--panel2);border:1px solid var(--line);min-width:0}
-  .hud .k{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--dim)}
-  .hud .v,.hud b{display:block;margin-top:8px;font-size:24px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums;color:var(--text)}
-  .ruleCard{padding:22px;border-radius:16px;background:var(--panel2);border:1px solid var(--line);display:flex;flex-direction:column;gap:14px}
-  .ruleTop{display:flex;align-items:center;justify-content:space-between;gap:12px}
-  .ruleLabel{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
-  .ruleState{padding:7px 12px;border-radius:999px;background:#0f141a;border:1px solid var(--line);color:var(--muted);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em}
-  .ruleText{margin:0;font-size:clamp(28px,4vw,48px);line-height:1.15;letter-spacing:-.03em;font-weight:750}
-  .ruleHint{min-height:22px;color:var(--muted);font-size:14px}
-  .meterWrap{height:10px;background:#0d1218;border:1px solid #253140;border-radius:999px;overflow:hidden}
-  .meter{height:100%;width:100%;transform-origin:left center;background:linear-gradient(90deg,var(--accent),#ffd977);transition:transform .08s linear,background .2s}
-  .stage{flex:1;min-height:300px;padding:24px;border-radius:16px;background:radial-gradient(500px 220px at 50% 100%,rgba(242,193,78,.12),transparent 70%),#0f141a;border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;position:relative;overflow:hidden}
-  .ambient{position:absolute;inset:0;pointer-events:none}
-  .moon,.dontSign,.shhSign{position:absolute;display:none;align-items:center;justify-content:center;font-weight:800;border-radius:14px;border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(4px)}
-  .moon{top:20px;right:20px;width:58px;height:58px;border-radius:50%;background:rgba(255,244,200,.12);font-size:28px}
-  .dontSign{top:20px;left:20px;padding:10px 14px;background:rgba(255,107,107,.12);color:#ff9696;letter-spacing:.08em}
-  .shhSign{bottom:20px;left:20px;padding:10px 14px;background:rgba(123,223,242,.12);color:#9fe8f5;letter-spacing:.08em}
-  .moon.on,.dontSign.on,.shhSign.on{display:flex}
-  .spider,.skull,.cat{position:absolute;filter:drop-shadow(0 6px 10px rgba(0,0,0,.35));animation:floaty 3s ease-in-out infinite}
-  @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-  .button-wrap{position:relative;z-index:2}
-  #theButton{width:min(320px,72vw);aspect-ratio:1/1;border-radius:50%;border:0;cursor:pointer;color:#fff;font-size:clamp(28px,5vw,42px);font-weight:900;letter-spacing:-.03em;text-transform:lowercase;background:radial-gradient(circle at 35% 30%,#ff8080,#d84545 45%,#8e1f1f 75%);box-shadow:0 28px 0 #651313,0 40px 60px rgba(0,0,0,.5),inset 0 2px 0 rgba(255,255,255,.25);transition:transform .08s,box-shadow .08s,filter .2s;position:relative}
-  #theButton::before{content:"";position:absolute;inset:10%;border-radius:50%;background:radial-gradient(circle at 30% 25%,rgba(255,255,255,.35),transparent 35%);pointer-events:none}
-  #theButton:hover{filter:brightness(1.04)}
-  #theButton:active,#theButton.pressed{transform:translateY(14px);box-shadow:0 14px 0 #651313,0 20px 30px rgba(0,0,0,.45),inset 0 2px 0 rgba(255,255,255,.2)}
-  #theButton.good{background:radial-gradient(circle at 35% 30%,#86e0ad,#40b874 45%,#1f6d43 75%);box-shadow:0 28px 0 #184f31,0 40px 60px rgba(0,0,0,.5),inset 0 2px 0 rgba(255,255,255,.25)}
-  #theButton.bad{background:radial-gradient(circle at 35% 30%,#9a9a9a,#666 45%,#333 75%);box-shadow:0 28px 0 #222,0 40px 60px rgba(0,0,0,.5),inset 0 2px 0 rgba(255,255,255,.15)}
-  #theButton.wait{background:radial-gradient(circle at 35% 30%,#ffe08a,#f2c14e 45%,#a87912 75%);box-shadow:0 28px 0 #76540d,0 40px 60px rgba(0,0,0,.5),inset 0 2px 0 rgba(255,255,255,.25);color:#2b2005}
-  .controls{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;z-index:2}
-  .ctl,.btn,.menuActions button,.primaryAction,.buyBtn{appearance:none;border:1px solid var(--line);background:#18212b;color:var(--text);padding:11px 14px;border-radius:12px;font-weight:650;font-size:14px;cursor:pointer;transition:.15s}
-  .ctl:hover,.btn:hover,.menuActions button:hover,.primaryAction:hover,.buyBtn:hover:not(:disabled){transform:translateY(-1px);border-color:#3a4d63;background:#1d2834}
-  .btn.primary,.primaryAction{background:linear-gradient(180deg,#ffd977,var(--accent));color:#191407;border-color:#f2c14e;font-weight:750}
-  .btn.primary:hover,.primaryAction:hover{filter:brightness(1.03);background:linear-gradient(180deg,#ffe38f,#f6cb63)}
-  .tiny{color:var(--dim);font-size:12px;text-align:center;max-width:560px;z-index:2}
-  .side{padding:20px;display:flex;flex-direction:column;gap:14px}
-  .panelHead h2{margin:0;font-size:24px;letter-spacing:-.02em}
-  .panelHead p{margin:4px 0 0;color:var(--muted);font-size:13px}
-  .menuNav{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-  .menuNav button{appearance:none;border:1px solid var(--line);background:#111820;color:var(--muted);padding:10px 12px;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer}
-  .menuNav button.active,.menuNav button:hover{color:var(--text);background:#18222d;border-color:#395067}
-  .menuNav button.active{box-shadow:inset 0 0 0 1px rgba(242,193,78,.35);color:var(--accent)}
-  .menuPanel{padding:18px;border-radius:16px;background:#10161d;border:1px solid var(--line);min-height:560px}
-  .panelScreen{display:none}.panelScreen.show{display:block}
-  .panelScreen h2{margin:0 0 6px;font-size:28px;letter-spacing:-.02em}
-  .panelScreen p{margin:0 0 18px;color:var(--muted);font-size:14px;line-height:1.6}
-  .statGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
-  .statCard{padding:14px;border-radius:14px;background:var(--panel2);border:1px solid var(--line)}
-  .statCard .k{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--dim);margin-bottom:8px}
-  .statCard .v{font-size:28px;font-weight:750;line-height:1.1;font-variant-numeric:tabular-nums}
-  .menuActions{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
-  .shopGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-  .shopItem{padding:14px;border-radius:14px;background:var(--panel2);border:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
-  .shopItem h3{margin:0;font-size:15px}
-  .shopItem p{margin:0;color:var(--muted);font-size:13px;line-height:1.5;min-height:38px}
-  .shopMeta{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:auto;padding-top:4px;font-size:13px;color:var(--accent);font-weight:700}
-  .buyBtn:disabled{opacity:.45;cursor:not-allowed}
-  .shopNote{margin-top:14px;padding:12px 14px;border-radius:12px;background:#121a22;border:1px dashed #35506b;color:var(--muted);font-size:13px}
-  .field{margin-bottom:14px}
-  .field label{display:block;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px}
-  .toggleRow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-radius:12px;background:var(--panel2);border:1px solid var(--line);color:var(--text);font-size:14px}
-  .toggleRow input[type="checkbox"]{width:20px;height:20px;accent-color:var(--accent)}
-  select,input[type="url"],input[type="text"]{width:100%;padding:12px 14px;border-radius:12px;background:var(--panel2);border:1px solid var(--line);color:var(--text)}
-  input[type="range"]{width:100%}
-  .overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(4,8,12,.58);backdrop-filter:blur(8px);z-index:50}
-  .overlay.show{display:flex}
-  .menuShell{width:min(1120px,100%);display:grid;grid-template-columns:300px 1fr;gap:16px}
-  .menuBrand{padding:28px;border-radius:20px;background:linear-gradient(180deg,rgba(242,193,78,.12),transparent 40%),#10161d;border:1px solid var(--line);box-shadow:var(--shadow)}
-  .menuEyebrow{font-size:11px;font-weight:800;letter-spacing:.18em;color:#d6ae4d;text-transform:uppercase;margin-bottom:14px}
-  .menuTitle{margin:0;font-size:clamp(40px,6vw,64px);line-height:.92;letter-spacing:-.05em}
-  .menuTitle span{display:block;color:var(--accent)}
-  .menuTag{margin:18px 0 24px;color:var(--muted);line-height:1.7;font-size:14px}
-  .menuBrand .menuNav{grid-template-columns:1fr}
-  .menuBrand .menuNav button{text-align:left;padding:12px 14px}
-  .menuPanelWrap{padding:24px;border-radius:20px;background:linear-gradient(180deg,rgba(255,255,255,.02),transparent 30%),#131a22;border:1px solid var(--line);box-shadow:var(--shadow)}
-  #musicWarn{display:none;margin-top:8px;color:#ff9b9b;font-size:12px;line-height:1.5}
-  body.purple{background:radial-gradient(1200px 700px at 20% -10%,#30204a 0%,transparent 60%),radial-gradient(900px 600px at 100% 0%,#251a3a 0%,transparent 55%),#120d1c}
+  .sub{margin-top:14px;color:#cfc2a5;font-size:14px;letter-spacing:.08em;text-transform:uppercase}
+  .hud{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin:0 0 16px}
+  .hud div{padding:10px 12px;border:1px solid var(--edge);background:rgba(239,230,210,.04);border-radius:10px;font:12px/1.3 Consolas,monospace;color:#cfc3ad}
+  .hud b{display:block;color:var(--paper);font-size:18px;margin-top:4px;font-family:Georgia,serif}
+  .ruleCard{margin:0 0 18px;padding:18px 20px;border:1px solid rgba(199,154,59,.28);background:linear-gradient(180deg,rgba(199,154,59,.09),rgba(0,0,0,.12));border-radius:12px;text-align:left;position:relative}
+  .ruleTop{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:8px}
+  .ruleLabel{font:12px/1 Consolas,monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
+  .ruleState{font:12px/1 Consolas,monospace;color:#cfc3ad}
+  .ruleText{font-size:clamp(20px,2.7vw,30px);line-height:1.35;margin:0}
+  .ruleHint{margin-top:8px;color:#b7ac98;font:13px/1.5 Consolas,monospace;min-height:20px}
+  .meterWrap{margin-top:12px;height:10px;background:rgba(239,230,210,.08);border-radius:999px;overflow:hidden;border:1px solid rgba(239,230,210,.08)}
+  .meter{height:100%;width:100%;background:linear-gradient(90deg,var(--gold),#e4bf68);transform-origin:left center}
+  .stage{display:flex;flex-direction:column;align-items:center;gap:18px;position:relative;padding:10px 0}
+  .ambient{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+  .spider,.skull,.cat,.shhSign,.moon,.dontSign{position:absolute;user-select:none}
+  .spider{font-size:28px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5));animation:bob 2.8s ease-in-out infinite}
+  .skull{font-size:30px;filter:drop-shadow(0 2px 6px rgba(0,0,0,.6));animation:bob 3.2s ease-in-out infinite}
+  .cat{font-size:30px;filter:drop-shadow(0 2px 6px rgba(0,0,0,.5));animation:bob 2.6s ease-in-out infinite}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+  .moon{top:8px;right:18px;font-size:34px;filter:drop-shadow(0 0 12px rgba(255,240,200,.35));opacity:0;transition:opacity .4s}
+  .moon.on{opacity:1}
+  .dontSign,.shhSign{top:14px;font:700 13px/1 Consolas,monospace;padding:6px 10px;letter-spacing:.1em;opacity:0;transition:opacity .3s}
+  .dontSign{left:18px;color:#ff8c80;border:2px solid rgba(255,140,128,.5);background:rgba(60,20,20,.45);transform:rotate(-7deg)}
+  .shhSign{left:18px;top:52px;color:#ffd27d;border:2px solid rgba(255,210,125,.45);background:rgba(60,45,15,.45);transform:rotate(4deg)}
+  .dontSign.on,.shhSign.on{opacity:1}
+  .button-wrap{position:relative;padding:22px;border-radius:999px;background:linear-gradient(180deg,#403a33,#211d19);box-shadow:inset 0 2px 0 rgba(255,255,255,.08),0 18px 40px rgba(0,0,0,.45);z-index:2}
+  #theButton{appearance:none;border:0;cursor:pointer;width:min(290px,70vw);height:min(290px,70vw);border-radius:50%;background:radial-gradient(circle at 35% 30%,#d04a39,#a63a2b 58%,#6d2018 100%);color:#fff5ef;font:700 clamp(28px,5vw,44px) Georgia,serif;letter-spacing:.04em;text-shadow:0 3px 0 rgba(0,0,0,.25);box-shadow:inset 0 10px 25px rgba(255,255,255,.22),inset 0 -18px 30px rgba(0,0,0,.28),0 18px 0 #531913,0 28px 40px rgba(0,0,0,.45);transition:transform .06s ease,box-shadow .06s ease,filter .2s,background .2s}
+  #theButton:hover{filter:brightness(1.03)}
+  #theButton:active,.pressed{transform:translateY(10px);box-shadow:inset 0 10px 25px rgba(255,255,255,.18),inset 0 -18px 30px rgba(0,0,0,.28),0 8px 0 #531913,0 12px 24px rgba(0,0,0,.45)}
+  #theButton.good{background:radial-gradient(circle at 35% 30%,#7cb06f,#5f8855 58%,#35502f 100%);box-shadow:inset 0 10px 25px rgba(255,255,255,.2),inset 0 -18px 30px rgba(0,0,0,.25),0 18px 0 #2b4026,0 28px 40px rgba(0,0,0,.45)}
+  #theButton.bad{background:radial-gradient(circle at 35% 30%,#8a3e36,#6d2d27 58%,#441916 100%)}
+  #theButton.wait{background:radial-gradient(circle at 35% 30%,#ad7a35,#8a5f25 58%,#56390f 100%);box-shadow:inset 0 10px 25px rgba(255,255,255,.18),inset 0 -18px 30px rgba(0,0,0,.28),0 18px 0 #412b0b,0 28px 40px rgba(0,0,0,.45)}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+  .ctl{background:rgba(239,230,210,.06);color:var(--paper);border:1px solid var(--edge);padding:9px 14px;border-radius:999px;font:14px/1 Consolas,monospace;cursor:pointer}
+  .ctl:hover{background:rgba(239,230,210,.12)}
+  .tiny{color:#8e8578;font:12px/1.6 Consolas,monospace;margin-top:2px}
+
+  /* game menu */
+  .overlay{position:fixed;inset:0;display:none;z-index:50;overflow:hidden;background:
+    radial-gradient(ellipse at 50% 0%,rgba(199,154,59,.08),transparent 35%),
+    linear-gradient(180deg,rgba(20,18,15,.96),rgba(10,9,8,.98));
+  }
+  .overlay.show{display:block}
+  .ulysses-bg{position:absolute;inset:-20% -40%;pointer-events:none;z-index:0;overflow:hidden;opacity:.055;user-select:none}
+  .ulysses-track{position:absolute;left:0;top:44%;width:max-content;white-space:nowrap;font-family:Georgia,'Times New Roman',serif;font-size:clamp(22px,3.2vw,42px);line-height:1.7;color:#efe6d2;letter-spacing:.01em;transform:translate3d(0,-50%,0) rotate(-7deg);animation:ulyssesScroll 240s linear infinite;will-change:transform}
+  .ulysses-track.u2{top:60%;opacity:.75;font-size:.92em;animation-duration:300s}
+  .ulysses-track span{padding-right:4rem}
+  @keyframes ulyssesScroll{from{transform:translate3d(0,-50%,0) rotate(-7deg)}to{transform:translate3d(-50%,-50%,0) rotate(-7deg)}}
+  .menuShell{width:min(1100px,100%);min-height:100%;margin:0 auto;padding:40px 24px;display:grid;grid-template-columns:320px 1fr;gap:28px;align-items:start;position:relative;z-index:1}
+  .menuBrand{padding:28px 10px 10px;position:sticky;top:20px}
+  .menuEyebrow{font:12px/1 Consolas,monospace;color:#a89774;letter-spacing:.2em;text-transform:uppercase;margin-bottom:14px}
+  .menuTitle{font-size:clamp(42px,7vw,76px);line-height:.92;margin:0 0 12px;letter-spacing:.02em;color:#f3e8cf;text-shadow:0 4px 30px rgba(0,0,0,.45)}
+  .menuTitle span{display:block;color:var(--gold);font-size:.48em;letter-spacing:.18em;margin-top:10px}
+  .menuTag{color:#b9ab91;font:14px/1.7 Consolas,monospace;max-width:28ch;margin:18px 0 28px}
+  .menuNav{display:flex;flex-direction:column;gap:10px}
+  .menuNav button{appearance:none;border:1px solid rgba(239,230,210,.12);background:rgba(255,255,255,.02);color:var(--paper);padding:16px 18px;text-align:left;font:16px/1 Consolas,monospace;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;position:relative;transition:.15s;border-radius:2px}
+  .menuNav button::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:transparent;transition:.15s}
+  .menuNav button:hover,.menuNav button.active{background:rgba(199,154,59,.08);border-color:rgba(199,154,59,.35);color:#fff3d6;transform:translateX(4px)}
+  .menuNav button:hover::before,.menuNav button.active::before{background:var(--gold)}
+  .menuPanel{min-height:520px;background:linear-gradient(180deg,rgba(35,31,27,.72),rgba(20,18,15,.72));border:1px solid rgba(239,230,210,.1);box-shadow:0 30px 100px rgba(0,0,0,.45);padding:28px;position:relative;overflow:hidden}
+  .menuPanel::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent,rgba(0,0,0,.12));pointer-events:none}
+  .panelScreen{display:none;position:relative;z-index:1}
+  .panelScreen.show{display:block}
+  .panelScreen h2{margin:0 0 8px;font-size:clamp(28px,4vw,42px);color:#f0e4ca}
+  .panelScreen p{margin:0 0 18px;color:#b9ab91;font:14px/1.7 Consolas,monospace}
+  .statGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:18px 0 24px}
+  .statCard{padding:14px;border:1px solid var(--edge);background:rgba(0,0,0,.18)}
+  .statCard .k{font:11px/1 Consolas,monospace;color:#a89774;text-transform:uppercase;letter-spacing:.1em}
+  .statCard .v{font:28px/1.2 Georgia,serif;color:#f3e8cf;margin-top:8px}
+  .shopGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .shopItem{border:1px solid var(--edge);background:rgba(0,0,0,.2);padding:14px}
+  .shopItem h3{margin:0 0 6px;font:16px/1.3 Consolas,monospace;color:#f0e4ca;text-transform:uppercase;letter-spacing:.04em}
+  .shopItem p{margin:0 0 12px;font:12px/1.6 Consolas,monospace;color:#b9ab91;min-height:38px}
+  .shopMeta{display:flex;justify-content:space-between;align-items:center;gap:10px;font:12px/1 Consolas,monospace;color:#cfc2a5}
+  .buyBtn{appearance:none;border:1px solid rgba(199,154,59,.4);background:rgba(199,154,59,.08);color:var(--gold);padding:8px 12px;font:12px/1 Consolas,monospace;cursor:pointer;text-transform:uppercase;letter-spacing:.06em}
+  .buyBtn:hover:not(:disabled){background:rgba(199,154,59,.18)}
+  .buyBtn:disabled{opacity:.45;cursor:not-allowed;border-color:rgba(239,230,210,.15);color:#998d79}
+  .shopNote{margin-top:16px;padding:12px 14px;border:1px dashed rgba(199,154,59,.25);color:#d4c39e;font:12px/1.7 Consolas,monospace;background:rgba(199,154,59,.04)}
+  .field{margin:0 0 16px}
+  .field label{display:block;font:12px/1 Consolas,monospace;color:#cfc2a5;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px}
+  .field select,.toggleRow{width:100%;font:14px/1.4 Consolas,monospace;color:var(--paper);background:rgba(239,230,210,.05);border:1px solid var(--edge);padding:11px 12px}
+  .field select option{color:#111}
+  .toggleRow{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .toggleRow input{width:20px;height:20px;accent-color:var(--gold)}
+  .menuActions{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap}
+  .menuActions button,.primaryAction{appearance:none;border:1px solid rgba(239,230,210,.18);background:rgba(239,230,210,.05);color:var(--paper);padding:12px 16px;font:14px/1 Consolas,monospace;cursor:pointer;text-transform:uppercase;letter-spacing:.06em}
+  .menuActions button:hover,.primaryAction:hover{background:rgba(239,230,210,.12)}
+  .primaryAction{border-color:rgba(199,154,59,.45);color:var(--gold);background:rgba(199,154,59,.08)}
   body.reduced-motion *,body.reduced-motion *::before,body.reduced-motion *::after{animation:none !important;transition:none !important;scroll-behavior:auto !important}
-  body.big-text .ruleText{font-size:clamp(32px,4.8vw,56px)}
-  body.big-text .line{font-size:clamp(24px,3.2vw,38px)}
-  body.big-text button,body.big-text input,body.big-text select{font-size:16px}
-  body.high-contrast{--bg:#000;--bg2:#000;--panel:#050505;--panel2:#0d0d0d;--line:#7a7a7a;--text:#fff;--muted:#f0f0f0;--dim:#ddd;--accent:#ffd400}
-  body.high-contrast .card,body.high-contrast .menuPanelWrap,body.high-contrast .menuBrand,body.high-contrast .statCard,body.high-contrast .shopItem,body.high-contrast .ruleCard,body.high-contrast .narrator,body.high-contrast .stage{box-shadow:none}
-  @media (max-width:1100px){.shell{grid-template-columns:1fr}.main{min-height:0}}
-  @media (max-width:900px){.menuShell{grid-template-columns:1fr}.menuBrand .menuNav{grid-template-columns:repeat(3,1fr)}.menuBrand .menuNav button{text-align:center}}
-  @media (max-width:720px){.shell{width:min(100vw - 20px,1280px);margin:10px auto;gap:12px}.topbar,.main,.side,.menuPanelWrap,.menuBrand{padding:16px}.hud{grid-template-columns:repeat(3,1fr)}.statGrid,.shopGrid{grid-template-columns:1fr}.menuNav{grid-template-columns:repeat(2,1fr)}.menuBrand .menuNav{grid-template-columns:repeat(2,1fr)}#theButton{width:min(280px,74vw)}}
-  @media (max-width:480px){.hud{grid-template-columns:repeat(2,1fr)}.menuNav,.menuBrand .menuNav{grid-template-columns:1fr}}
+  body.big-text{font-size:18px}
+  body.big-text .ruleText{font-size:clamp(24px,3vw,36px)}
+  body.big-text .menuNav button,body.big-text .menuActions button,body.big-text .primaryAction{font-size:16px}
+  body.high-contrast{--edge:rgba(255,245,220,.35);--paper:#fff8e8}
+  body.high-contrast .menuPanel,body.high-contrast .ruleCard,body.high-contrast .narrator,body.high-contrast .hud div,body.high-contrast .shopItem,body.high-contrast .statCard{border-color:rgba(255,245,220,.35)!important}
+
+  @media (max-width:900px){.menuShell{grid-template-columns:1fr;}.menuBrand{position:static;padding-top:0}.shopGrid{grid-template-columns:1fr}}
+  @media (max-width:700px){.ulysses-track{font-size:20px;animation-duration:170s}}
+  @media (max-width:760px){.hud{grid-template-columns:repeat(3,minmax(0,1fr))}.ruleCard{text-align:center}.ruleTop{flex-direction:column}.statGrid{grid-template-columns:1fr 1fr}}
+  @media (max-width:480px){.hud{grid-template-columns:repeat(2,minmax(0,1fr))}.statGrid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-  <div class="shell">
-    <header class="topbar card">
-      <div class="brand">
-        <div class="logo">S</div>
-        <div>
-          <h1>THE STANLEY <span>BUTTON</span></h1>
-          <p>follow instructions. remember consequences. disappoint the narrator.</p>
-        </div>
-      </div>
-      <div class="status-pill"><span class="status-dot"></span><span id="statusText">narrator online</span></div>
-    </header>
+<main class="room">
+  <section class="narrator" aria-live="polite">
+    <p class="line" id="line">stanley saw a button. the narrator saw a teaching opportunity. this was already going poorly.</p>
+    <div class="sub" id="sub">follow the rule. pay attention. the narrator is not going to repeat himself.</div>
+  </section>
 
-    <main class="main card">
-      <section class="narrator" aria-live="polite">
-        <p class="line" id="line">stanley saw a button. the narrator saw a teaching opportunity. this was already going poorly.</p>
-        <div class="sub" id="sub">follow the rule. pay attention. the narrator is not going to repeat himself.</div>
-      </section>
+  <section class="hud">
+    <div>round<b id="hudRound">1</b></div>
+    <div>score<b id="hudScore">0</b></div>
+    <div>strikes<b id="hudStrikes">0 / 3</b></div>
+    <div>streak<b id="hudStreak">0</b></div>
+    <div>noted<b id="hudNoted">0</b></div>
+    <div>tools<b id="hudTools">S0 / K0 / R0</b></div>
+  </section>
 
-      <section class="hud">
-        <div class="stat"><div class="k">round</div><b class="v" id="hudRound">1</b></div>
-        <div class="stat"><div class="k">score</div><b class="v" id="hudScore">0</b></div>
-        <div class="stat"><div class="k">strikes</div><b class="v" id="hudStrikes">0 / 3</b></div>
-        <div class="stat"><div class="k">streak</div><b class="v" id="hudStreak">0</b></div>
-        <div class="stat"><div class="k">noted</div><b class="v" id="hudNoted">0</b></div>
-        <div class="stat"><div class="k">tools</div><b class="v" id="hudTools">S0 / K0 / R0</b></div>
-      </section>
+  <section class="ruleCard">
+    <div class="ruleTop">
+      <div class="ruleLabel" id="ruleLabel">current instruction</div>
+      <div class="ruleState" id="ruleState">waiting</div>
+    </div>
+    <p class="ruleText" id="ruleText">loading rules...</p>
+    <div class="ruleHint" id="ruleHint"></div>
+    <div class="meterWrap"><div class="meter" id="meter"></div></div>
+  </section>
 
-      <section class="ruleCard">
-        <div class="ruleTop">
-          <div class="ruleLabel" id="ruleLabel">current instruction</div>
-          <div class="ruleState" id="ruleState">waiting</div>
-        </div>
-        <p class="ruleText" id="ruleText">loading rules...</p>
-        <div class="ruleHint" id="ruleHint"></div>
-        <div class="meterWrap"><div class="meter" id="meter"></div></div>
-      </section>
+  <section class="stage">
+    <div class="ambient" id="ambient">
+      <div class="moon" id="moon">🌙</div>
+      <div class="dontSign" id="dontSign">DON'T</div>
+      <div class="shhSign" id="shhSign">SHH</div>
+    </div>
+    <div class="button-wrap"><button id="theButton" type="button">push me</button></div>
+    <div class="controls">
+      <button class="ctl" id="skipBtn" type="button" onclick="window.__sbSkip&&window.__sbSkip()">skip</button>
+      <button class="ctl" id="rerollBtn" type="button" onclick="window.__sbReroll&&window.__sbReroll()">reroll</button>
+      <button class="ctl" id="menuBtn" type="button" onclick="window.__sbMenu&&window.__sbMenu()">menu</button>
+      <button class="ctl" id="resetBtn" type="button" onclick="window.__sbReset&&window.__sbReset()">reset game</button>
+    </div>
+    <div class="tiny">some things the narrator says will matter later. he will not bring them up again. space/enter also presses the button.</div>
+  </section>
+</main>
 
-      <section class="stage">
-        <div class="ambient" id="ambient">
-          <div class="moon" id="moon">🌙</div>
-          <div class="dontSign" id="dontSign">DON'T</div>
-          <div class="shhSign" id="shhSign">SHH</div>
-        </div>
-        <div class="button-wrap"><button id="theButton" type="button">push me</button></div>
-        <div class="controls">
-          <button class="ctl" id="skipBtn" type="button" onclick="window.__sbSkip&&window.__sbSkip()">skip</button>
-          <button class="ctl" id="rerollBtn" type="button" onclick="window.__sbReroll&&window.__sbReroll()">reroll</button>
-          <button class="ctl" id="menuBtn" type="button" onclick="window.__sbMenu&&window.__sbMenu()">menu</button>
-          <button class="ctl" id="resetBtn" type="button" onclick="window.__sbReset&&window.__sbReset()">reset</button>
-        </div>
-        <div class="tiny">some things the narrator says will matter later. space/enter also presses the button.</div>
-      </section>
-    </main>
-
-    <aside class="side card">
-      <div class="panelHead">
-        <div>
-          <h2>Control Room</h2>
-          <p>shop, stats, settings, updates.</p>
-        </div>
-      </div>
+<div class="overlay show" id="overlay">
+  <div class="ulysses-bg" aria-hidden="true">
+    <div class="ulysses-track" id="ulyssesTrackA"></div>
+    <div class="ulysses-track u2" id="ulyssesTrackB"></div>
+  </div>
+  <div class="menuShell">
+    <aside class="menuBrand">
+      <div class="menuEyebrow">interactive narrative disappointment</div>
+      <h1 class="menuTitle">THE STANLEY<span>BUTTON</span></h1>
+      <div class="menuTag">a button. some rules. a narrator. and an increasingly unreasonable amount of things to remember.</div>
       <nav class="menuNav">
-        <button class="active" data-screen="main" id="navMain">Main</button>
+        <button class="active" data-screen="main" id="navMain">Main Menu</button>
         <button data-screen="shop" id="navShop">Shop</button>
         <button data-screen="stats" id="navStats">Stats</button>
         <button data-screen="settings" id="navSettings">Settings</button>
         <button data-screen="updates" id="navUpdates">Updates</button>
         <button data-screen="credits" id="navCredits">Credits</button>
       </nav>
-      <div class="menuPanel" id="sidePanel">
-        <div class="panelScreen show" id="screenMain">
-          <h2 id="menuHeading">Main Menu</h2>
-          <p id="menuSub">press start. follow instructions. make the narrator regret everything.</p>
-          <div class="statGrid">
-            <div class="statCard"><div class="k">current score</div><div class="v" id="mScore">0</div></div>
-            <div class="statCard"><div class="k">best streak</div><div class="v" id="mStreak">0</div></div>
-            <div class="statCard"><div class="k">round</div><div class="v" id="mRound">1</div></div>
-          </div>
-          <div class="menuActions">
-            <button class="primaryAction" id="startBtn" type="button" onclick="window.__sbStart&&window.__sbStart()">start game</button>
-            <button id="dailyBtn" type="button" onclick="window.__sbDaily&&window.__sbDaily()">daily challenge</button>
-            <button id="menuResetBtn" type="button" onclick="window.__sbReset&&window.__sbReset()">new run</button>
-            <button id="tutorialBtn" type="button" onclick="window.__sbTutorial&&window.__sbTutorial()">tutorial</button>
-          </div>
+    </aside>
+    <section class="menuPanel">
+      <div class="panelScreen show" id="screenMain">
+        <h2 id="menuHeading">Main Menu</h2>
+        <p id="menuSub">press start. follow instructions. make the narrator regret everything.</p>
+        <div class="statGrid">
+          <div class="statCard"><div class="k">current score</div><div class="v" id="mScore">0</div></div>
+          <div class="statCard"><div class="k">best streak</div><div class="v" id="mStreak">0</div></div>
+          <div class="statCard"><div class="k">round</div><div class="v" id="mRound">1</div></div>
         </div>
-
-        <div class="panelScreen" id="screenTutorial">
-          <h2>Tutorial</h2>
-          <p>interactive narrated training. the narrator will talk you through it while you actually play.</p>
-          <div class="statGrid">
-            <div class="statCard"><div class="k">format</div><div class="v" style="font-size:22px">live</div></div>
-            <div class="statCard"><div class="k">voice</div><div class="v" style="font-size:22px">narrator</div></div>
-            <div class="statCard"><div class="k">risk</div><div class="v" style="font-size:22px">low</div></div>
-          </div>
-          <div class="menuActions">
-            <button class="primaryAction" id="tutStart" type="button" onclick="window.__sbTutorial&&window.__sbTutorial()">start tutorial</button>
-            <button onclick="window.__sbNav&&window.__sbNav('main')">back</button>
-          </div>
-        </div>
-
-        <div class="panelScreen" id="screenShop">
-          <h2>Shop</h2>
-          <p>spend score on questionable advantages. prices are offensive on purpose.</p>
-          <div class="statGrid">
-            <div class="statCard"><div class="k">spendable score</div><div class="v" id="shopScore">0</div></div>
-            <div class="statCard"><div class="k">shields</div><div class="v" id="shopShield">0</div></div>
-            <div class="statCard"><div class="k">active boosts</div><div class="v" id="shopBoosts">0</div></div>
-          </div>
-          <div class="shopGrid" id="shopGrid"></div>
-          <div class="shopNote" id="shopNote">the narrator does not endorse capitalism. he does endorse survival.</div>
-        </div>
-
-        <div class="panelScreen" id="screenStats">
-          <h2>Stats & Codex</h2>
-          <p>numbers the narrator wishes you hadn't earned.</p>
-          <div class="statGrid" id="statsGrid"></div>
-          <div style="margin-top:14px;border:1px solid var(--line);background:#111820;padding:14px;border-radius:14px">
-            <div style="font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.12em;margin-bottom:10px">rule codex</div>
-            <div id="codexList" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;font-size:12px;line-height:1.5;color:var(--muted)"></div>
-          </div>
-          <div class="menuActions"><button class="primaryAction" onclick="window.__sbNav&&window.__sbNav('main')">back</button></div>
-        </div>
-
-        <div class="panelScreen" id="screenSettings">
-          <h2>Settings</h2>
-          <p>configure the narrator. he already has opinions about this.</p>
-          <div class="field">
-            <label for="ttsToggle">narrator tts</label>
-            <div class="toggleRow"><span>speak lines out loud</span><input id="ttsToggle" type="checkbox"></div>
-          </div>
-          <div class="field">
-            <label for="voiceSelect">narrator voice</label>
-            <select id="voiceSelect"></select>
-          </div>
-          <div class="field"><label>accessibility</label>
-            <div class="toggleRow"><span>reduced motion</span><input id="a11yMotion" type="checkbox"></div>
-            <div class="toggleRow" style="margin-top:8px"><span>big text</span><input id="a11yText" type="checkbox"></div>
-            <div class="toggleRow" style="margin-top:8px"><span>high contrast</span><input id="a11yContrast" type="checkbox"></div>
-          </div>
-          <div class="field" style="margin-top:18px;padding-top:18px;border-top:1px solid var(--line)">
-            <label for="musicEnabled">void records music</label>
-            <div class="toggleRow"><span>play music from void-records-server</span><input id="musicEnabled" type="checkbox"></div>
-          </div>
-          <div class="field">
-            <label for="musicBase">server base url</label>
-            <input id="musicBase" type="url" placeholder="https://your-tunnel.trycloudflare.com">
-            <div id="musicWarn"></div>
-          </div>
-          <div class="field">
-            <label for="musicVol">music volume</label>
-            <div class="toggleRow"><input id="musicVol" type="range" min="0" max="100" value="35" style="width:100%;accent-color:var(--accent)"><span id="musicVolLabel" style="min-width:46px;text-align:right;font-size:12px;color:var(--muted)">35%</span></div>
-          </div>
-          <div class="field">
-            <label>now playing</label>
-            <div class="toggleRow" style="flex-direction:column;align-items:stretch;gap:10px">
-              <div id="musicNow" style="font-size:13px;color:var(--muted);min-height:20px;word-break:break-word">music off</div>
-              <div style="display:flex;gap:8px;flex-wrap:wrap">
-                <button id="musicPrev" type="button" class="btn">prev</button>
-                <button id="musicToggle" type="button" class="btn primary">play</button>
-                <button id="musicNext" type="button" class="btn">next</button>
-              </div>
-            </div>
-          </div>
-          <div class="menuActions">
-            <button class="primaryAction" id="settingsCloseBtn" type="button" onclick="window.__sbSettingsClose&&window.__sbSettingsClose()">back to menu</button>
-          </div>
-        </div>
-
-        <div class="panelScreen" id="screenUpdates">
-          <h2>Update Log</h2>
-          <p>changes, fixes, and narrator-approved nonsense.</p>
-          <div id="updateLog" style="display:flex;flex-direction:column;gap:10px;max-height:420px;overflow:auto;padding-right:4px"></div>
-          <div class="menuActions"><button class="primaryAction" onclick="window.__sbNav&&window.__sbNav('main')">back</button></div>
-        </div>
-
-        <div class="panelScreen" id="screenCredits">
-          <h2>Credits</h2>
-          <p>designed to be simple, annoying, and slightly unfair in a way the narrator finds entertaining.</p>
-          <div class="statGrid">
-            <div class="statCard"><div class="k">voice</div><div class="v" style="font-size:20px">your browser</div></div>
-            <div class="statCard"><div class="k">antagonist</div><div class="v" style="font-size:20px">the button</div></div>
-            <div class="statCard"><div class="k">victim</div><div class="v" style="font-size:20px">stanley</div></div>
-          </div>
-          <div class="menuActions"><button class="primaryAction" onclick="window.__sbNav&&window.__sbNav('main')">back</button></div>
+        <div class="menuActions">
+          <button class="primaryAction" id="startBtn" type="button" onclick="window.__sbStart&&window.__sbStart()">start game</button>
+          <button id="dailyBtn" type="button" onclick="window.__sbDaily&&window.__sbDaily()">daily challenge</button>
+          <button id="menuResetBtn" type="button" onclick="window.__sbReset&&window.__sbReset()">new run</button>
+          <button id="tutorialBtn" type="button" onclick="window.__sbTutorial&&window.__sbTutorial()">tutorial</button>
         </div>
       </div>
-    </aside>
-  </div>
 
-  <div class="overlay show" id="overlay">
-    <div class="menuShell">
-      <aside class="menuBrand">
-        <div class="menuEyebrow">interactive narrative disappointment</div>
-        <h1 class="menuTitle">THE STANLEY<span>BUTTON</span></h1>
-        <div class="menuTag">a button. some rules. a narrator. and an increasingly unreasonable amount of things to remember.</div>
-        <nav class="menuNav">
-          <button class="active" data-screen="main" data-overlay-nav="1">Main Menu</button>
-          <button data-screen="shop" data-overlay-nav="1">Shop</button>
-          <button data-screen="stats" data-overlay-nav="1">Stats</button>
-          <button data-screen="settings" data-overlay-nav="1">Settings</button>
-          <button data-screen="updates" data-overlay-nav="1">Updates</button>
-          <button data-screen="credits" data-overlay-nav="1">Credits</button>
-        </nav>
-      </aside>
-      <section class="menuPanelWrap">
-        <div class="menuPanel" id="overlayPanel"></div>
-      </section>
-    </div>
+      <div class="panelScreen" id="screenTutorial">
+        <h2>Tutorial</h2>
+        <p>interactive narrated training. the narrator will talk you through it while you actually play.</p>
+        <div class="statGrid">
+          <div class="statCard"><div class="k">format</div><div class="v" style="font-size:22px">live</div></div>
+          <div class="statCard"><div class="k">voice</div><div class="v" style="font-size:22px">narrator</div></div>
+          <div class="statCard"><div class="k">risk</div><div class="v" style="font-size:22px">low</div></div>
+        </div>
+        <div class="menuActions">
+          <button class="primaryAction" id="tutStart" type="button" onclick="window.__sbTutorial&&window.__sbTutorial()">start tutorial</button>
+          <button onclick="window.__sbNav&&window.__sbNav('main')">back</button>
+        </div>
+      </div>
+
+      <div class="panelScreen" id="screenShop">
+        <h2>Shop</h2>
+        <p>spend score on questionable advantages. prices are offensive on purpose.</p>
+        <div class="statGrid">
+          <div class="statCard"><div class="k">spendable score</div><div class="v" id="shopScore">0</div></div>
+          <div class="statCard"><div class="k">shields</div><div class="v" id="shopShield">0</div></div>
+          <div class="statCard"><div class="k">active boosts</div><div class="v" id="shopBoosts">0</div></div>
+        </div>
+        <div class="shopGrid" id="shopGrid"></div>
+        <div class="shopNote" id="shopNote">the narrator does not endorse capitalism. he does endorse survival.</div>
+      </div>
+
+      <div class="panelScreen" id="screenStats">
+        <h2>Stats & Codex</h2>
+        <p>numbers the narrator wishes you hadn't earned.</p>
+        <div class="statGrid" id="statsGrid"></div>
+        <div style="margin-top:18px;border:1px solid rgba(239,230,210,.12);background:rgba(0,0,0,.18);padding:14px">
+          <div style="font:12px/1 Consolas,monospace;color:#a89774;text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">rule codex</div>
+          <div id="codexList" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;font:12px/1.6 Consolas,monospace;color:#b9ab91"></div>
+        </div>
+        <div class="menuActions"><button class="primaryAction" onclick="window.__sbNav&&window.__sbNav('main')">back</button></div>
+      </div>
+
+      <div class="panelScreen" id="screenSettings">
+        <h2>Settings</h2>
+        <p>configure the narrator. he already has opinions about this.</p>
+        <div class="field">
+          <label for="ttsToggle">narrator tts</label>
+          <div class="toggleRow"><span>speak lines out loud</span><input id="ttsToggle" type="checkbox"></div>
+        </div>
+        <div class="field">
+          <label for="voiceSelect">narrator voice</label>
+          <select id="voiceSelect"></select>
+        </div>
+        <div class="field"><label>accessibility</label>
+          <div class="toggleRow"><span>reduced motion</span><input id="a11yMotion" type="checkbox"></div>
+          <div class="toggleRow" style="margin-top:8px"><span>big text</span><input id="a11yText" type="checkbox"></div>
+          <div class="toggleRow" style="margin-top:8px"><span>high contrast</span><input id="a11yContrast" type="checkbox"></div>
+        </div>
+        <div class="field" style="margin-top:22px;padding-top:18px;border-top:1px solid rgba(239,230,210,.1)">
+          <label for="musicEnabled">void records music</label>
+          <div class="toggleRow"><span>play music from void-records-server</span><input id="musicEnabled" type="checkbox"></div>
+        </div>
+        <div class="field">
+          <label for="musicBase">server base url</label>
+          <input id="musicBase" type="url" placeholder="https://your-tunnel.trycloudflare.com" style="width:100%;font:14px/1.4 Consolas,monospace;color:var(--paper);background:rgba(239,230,210,.05);border:1px solid var(--edge);padding:11px 12px">
+          <div id="musicWarn" style="margin-top:8px;color:#ffb3a9;font:12px/1.5 Consolas,monospace;display:none"></div>
+        </div>
+        <div class="field">
+          <label for="musicVol">music volume</label>
+          <div class="toggleRow"><input id="musicVol" type="range" min="0" max="100" value="35" style="width:100%;accent-color:var(--gold)"><span id="musicVolLabel" style="min-width:46px;text-align:right;font:12px/1 Consolas,monospace;color:#cfc2a5">35%</span></div>
+        </div>
+        <div class="field">
+          <label>now playing</label>
+          <div class="toggleRow" style="flex-direction:column;align-items:stretch;gap:10px">
+            <div id="musicNow" style="font:13px/1.5 Consolas,monospace;color:#cfc2a5;min-height:20px;word-break:break-word">music off</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button id="musicPrev" type="button" style="appearance:none;border:1px solid var(--edge);background:rgba(239,230,210,.05);color:var(--paper);padding:8px 12px;font:12px/1 Consolas,monospace;cursor:pointer">prev</button>
+              <button id="musicToggle" type="button" style="appearance:none;border:1px solid rgba(199,154,59,.4);background:rgba(199,154,59,.08);color:var(--gold);padding:8px 12px;font:12px/1 Consolas,monospace;cursor:pointer">play</button>
+              <button id="musicNext" type="button" style="appearance:none;border:1px solid var(--edge);background:rgba(239,230,210,.05);color:var(--paper);padding:8px 12px;font:12px/1 Consolas,monospace;cursor:pointer">next</button>
+            </div>
+          </div>
+        </div>
+        <div class="menuActions">
+          <button class="primaryAction" id="settingsCloseBtn" type="button" onclick="window.__sbSettingsClose&&window.__sbSettingsClose()">back to menu</button>
+        </div>
+      </div>
+
+      <div class="panelScreen" id="screenUpdates">
+        <h2>Update Log</h2>
+        <p>changes, fixes, and narrator-approved nonsense. oldest to newest.</p>
+        <div id="updateLog" style="display:flex;flex-direction:column;gap:12px;max-height:360px;overflow:auto;padding-right:4px"></div>
+        <div class="menuActions"><button class="primaryAction" onclick="window.__sbNav&&window.__sbNav('main')">back</button></div>
+      </div>
+
+      <div class="panelScreen" id="screenCredits">
+        <h2>Credits</h2>
+        <p>designed to be simple, annoying, and slightly unfair in a way the narrator finds entertaining.</p>
+        <div class="statGrid">
+          <div class="statCard"><div class="k">voice</div><div class="v" style="font-size:22px">your browser</div></div>
+          <div class="statCard"><div class="k">antagonist</div><div class="v" style="font-size:22px">the button</div></div>
+          <div class="statCard"><div class="k">victim</div><div class="v" style="font-size:22px">stanley</div></div>
+        </div>
+        <div class="menuActions"><button class="primaryAction" onclick="window.__sbNav&&window.__sbNav('main')">back</button></div>
+      </div>
+    </section>
   </div>
+</div>
 
 <script>
 (() => {
@@ -358,9 +322,6 @@
   const dontSignEl = document.getElementById('dontSign');
   const shhSignEl = document.getElementById('shhSign');
   const overlay = document.getElementById('overlay');
-  const sidePanel = document.getElementById('sidePanel');
-  const overlayPanel = document.getElementById('overlayPanel');
-  const sidePanelHome = sidePanel ? sidePanel.parentElement : null;
   const startBtn = document.getElementById('startBtn');
   const menuResetBtn = document.getElementById('menuResetBtn');
   const ttsToggle = document.getElementById('ttsToggle');
@@ -784,8 +745,7 @@
     { date:'2026-11-22', title:'music bridge', items:['void-records-server music player in settings','base URL, volume, prev/play/next, now playing','mixed-content warning for https pages using http localhost'] },
     { date:'2026-11-22', title:'massive feature pack', items:['daily seeded challenge mode','stats/codex screen + persistent meta','achievements tracking','accessibility settings (reduced motion, big text, high contrast)','shop: skip/reroll tokens and in-run skip/reroll controls'] },
     { date:'2026-11-22', title:'first-time tutorial', items:['tutorial screen with 5 quick steps','auto-shows for first-time players','tutorial button in main menu, skip/finish persists'] },
-    { date:'2026-11-22', title:'narrated gameplay tutorial', items:['replaced static tutorial with interactive narrated gameplay','tutorial runs real rules with narrator voice/TTS lines','soft-fail retries in tutorial, completion marks tutorialDone'] },
-    { date:'2026-11-22', title:'full ui rework', items:['new dark control-room layout with side panel','cleaner HUD/rule/stage visuals and responsive menu overlay','kept all gameplay, shop, stats, music, TTS, and tutorial features'] }
+    { date:'2026-11-22', title:'narrated gameplay tutorial', items:['replaced static tutorial with interactive narrated gameplay','tutorial runs real rules with narrator voice/TTS lines','soft-fail retries in tutorial, completion marks tutorialDone'] }
   ];
   function renderUpdates(){
     const el = document.getElementById('updateLog');
@@ -920,7 +880,7 @@
   // menu/nav
   function showScreen(name){
     document.querySelectorAll('.panelScreen').forEach(s=>s.classList.remove('show'));
-    document.querySelectorAll('.menuNav button[data-screen]').forEach(b=>b.classList.toggle('active', b.dataset.screen===name));
+    document.querySelectorAll('.menuNav button').forEach(b=>b.classList.toggle('active', b.dataset.screen===name));
     const el=document.getElementById('screen'+name.charAt(0).toUpperCase()+name.slice(1));
     if(el) el.classList.add('show');
     if(name==='shop') renderShop();
@@ -928,14 +888,8 @@
     if(name==='stats') renderStats();
     if(name==='tutorial'){ /* screen is static launcher */ }
   }
-  function mountPanel(inOverlay){
-    if(!sidePanel || !overlayPanel || !sidePanelHome) return;
-    if(inOverlay){ if(sidePanel.parentElement !== overlayPanel) overlayPanel.appendChild(sidePanel); }
-    else { if(sidePanel.parentElement !== sidePanelHome) sidePanelHome.appendChild(sidePanel); }
-  }
   function showMenu(showSettings){
     if(gameStarted && !gameOver && !paused){ paused=true; pauseStartedAt=performance.now(); cancelAnimationFrame(raf); }
-    mountPanel(true);
     overlay.classList.add('show');
     const firstTime = !meta.tutorialDone && !gameStarted && !showSettings;
     showScreen(showSettings ? 'settings' : (firstTime ? 'tutorial' : 'main'));
@@ -946,9 +900,8 @@
   }
   function hideMenu(){
     if(!gameStarted){ startGame(); return; }
-    if(gameOver){ overlay.classList.remove('show'); mountPanel(false); return; }
+    if(gameOver){ overlay.classList.remove('show'); return; }
     overlay.classList.remove('show');
-    mountPanel(false);
     if(paused && pauseStartedAt){
       const pausedFor = performance.now()-pauseStartedAt;
       roundStart += pausedFor;
@@ -983,7 +936,6 @@
   resetBtn.addEventListener('click', ()=>resetRun(dailyMode));
   overlay.addEventListener('click', (e)=>{ if(e.target===overlay && gameStarted) hideMenu(); });
   document.querySelectorAll('.menuNav button[data-screen]').forEach(btn=>btn.addEventListener('click', ()=>showScreen(btn.dataset.screen)));
-  document.querySelectorAll('[data-overlay-nav]').forEach(btn=>btn.addEventListener('click', ()=>showScreen(btn.dataset.screen)));
   document.getElementById('settingsCloseBtn').addEventListener('click', ()=>showScreen('main'));
   document.getElementById('skipBtn').addEventListener('click', useSkip);
   document.getElementById('rerollBtn').addEventListener('click', useReroll);
@@ -1022,7 +974,29 @@
   musicToggleBtn.addEventListener('click', ()=>musicTogglePlay());
   syncMusicUi();
 
+  function initUlyssesBackground(){
+    const a=document.getElementById('ulyssesTrackA');
+    const b=document.getElementById('ulyssesTrackB');
+    if(!a||!b) return;
+    const excerpt = [
+      'Stately, plump Buck Mulligan came from the stairhead, bearing a bowl of lather on which a mirror and a razor lay crossed.',
+      'A yellow dressinggown, ungirdled, was sustained gently behind him on the mild morning air.',
+      'He held the bowl aloft and intoned: —Introibo ad altare Dei.',
+      'Halted, he peered down the dark winding stairs and called out coarsely: —Come up, Kinch! Come up, you fearful jesuit!',
+      'Solemnly he came forward and mounted the round gunrest. He faced about and blessed gravely thrice the tower, the surrounding land and the awaking mountains.',
+      'Stephen Dedalus stepped up, followed him wearily halfway and sat down on the edge of the gunrest, watching him still.',
+      'Buck Mulligan\'s gay voice went on. —My name is absurd too: Malachi Mulligan, two dactyls. But it has a Hellenic ring, hasn\'t it? Tripping and sunny like the buck himself.',
+      'We must go to Athens. Will you come if I can get the aunt to fork out twenty quid?',
+      '—Yes, said Stephen. —Yes, I will Yes.'
+    ].join('  •  ');
+    // duplicate content twice in one track so -50% transform lands on identical content = seamless loop
+    const block = `<span>${excerpt}</span><span aria-hidden="true">${excerpt}</span>`;
+    a.innerHTML = block;
+    b.innerHTML = block;
+  }
+
   // init
+  initUlyssesBackground();
   memoryDeck = shuffle(makeMemoryRules());
   deck = shuffle(makeRules());
   updateHud();
