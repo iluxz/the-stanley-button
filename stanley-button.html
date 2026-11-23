@@ -59,11 +59,11 @@
     linear-gradient(180deg,rgba(20,18,15,.96),rgba(10,9,8,.98));
   }
   .overlay.show{display:block}
-  .ulysses-bg{position:absolute;inset:-20% -40%;pointer-events:none;z-index:0;overflow:hidden;opacity:.28;user-select:none}
-  .ulysses-track{position:absolute;left:0;top:44%;width:max-content;white-space:nowrap;font-family:Georgia,'Times New Roman',serif;font-size:clamp(22px,3.2vw,42px);line-height:1.7;color:#f0e4ca;text-shadow:0 0 12px rgba(199,154,59,.12);letter-spacing:.01em;transform:translate3d(0,-50%,0) rotate(-7deg);animation:ulyssesScroll 240s linear infinite;will-change:transform}
-  .ulysses-track.u2{top:60%;opacity:.65;font-size:.92em;animation-duration:300s}
-  .ulysses-track span{padding-right:4rem}
-  @keyframes ulyssesScroll{from{transform:translate3d(0,-50%,0) rotate(-7deg)}to{transform:translate3d(-50%,-50%,0) rotate(-7deg)}}
+  .ulysses-bg{position:absolute;inset:0;pointer-events:none;z-index:0;overflow:hidden;opacity:.18;user-select:none}
+  .ulysses-scroll{position:absolute;left:50%;top:0;width:min(980px,90vw);animation:ulyssesDown 180s linear infinite;will-change:transform}
+  .ulysses-text{font-family:Georgia,'Times New Roman',serif;font-size:clamp(13px,1.55vw,18px);line-height:1.95;color:#f0e4ca;text-align:justify;padding:28px 0;white-space:pre-wrap}
+  .ulysses-text p{margin:0 0 1em}
+  @keyframes ulyssesDown{from{transform:translateX(-50%) translateY(-50%)}to{transform:translateX(-50%) translateY(0)}}
   .menuShell{width:min(1100px,100%);min-height:100%;margin:0 auto;padding:40px 24px;display:grid;grid-template-columns:320px 1fr;gap:28px;align-items:start;position:relative;z-index:1}
   .menuBrand{padding:28px 10px 10px;position:sticky;top:20px}
   .menuEyebrow{font:12px/1 Consolas,monospace;color:#a89774;letter-spacing:.2em;text-transform:uppercase;margin-bottom:14px}
@@ -162,8 +162,36 @@
 
 <div class="overlay show" id="overlay">
   <div class="ulysses-bg" aria-hidden="true">
-    <div class="ulysses-track">Stately, plump Buck Mulligan came from the stairhead, bearing a bowl of lather on which a mirror and a razor lay crossed.  •  A yellow dressinggown, ungirdled, was sustained gently behind him on the mild morning air.  •  He held the bowl aloft and intoned: —Introibo ad altare Dei.  •  <span aria-hidden="true">Stately, plump Buck Mulligan came from the stairhead, bearing a bowl of lather on which a mirror and a razor lay crossed.  •  A yellow dressinggown, ungirdled, was sustained gently behind him on the mild morning air.  •  He held the bowl aloft and intoned: —Introibo ad altare Dei.  •  </span></div>
-    <div class="ulysses-track u2">Stephen Dedalus stepped up, followed him wearily halfway and sat down on the edge of the gunrest.  •  Buck Mulligan's gay voice went on. —My name is absurd too: Malachi Mulligan, two dactyls.  •  —Yes, said Stephen. —Yes, I will Yes.  •  <span aria-hidden="true">Stephen Dedalus stepped up, followed him wearily halfway and sat down on the edge of the gunrest.  •  Buck Mulligan's gay voice went on. —My name is absurd too: Malachi Mulligan, two dactyls.  •  —Yes, said Stephen. —Yes, I will Yes.  •  </span></div>
+    <div class="ulysses-scroll">
+      <div class="ulysses-text">
+<p>Stately, plump Buck Mulligan came from the stairhead, bearing a bowl of lather on which a mirror and a razor lay crossed. A yellow dressinggown, ungirdled, was sustained gently behind him on the mild morning air. He held the bowl aloft and intoned:</p>
+<p>—Introibo ad altare Dei.</p>
+<p>Halted, he peered down the dark winding stairs and called out coarsely:</p>
+<p>—Come up, Kinch! Come up, you fearful jesuit!</p>
+<p>Solemnly he came forward and mounted the round gunrest. He faced about and blessed gravely thrice the tower, the surrounding land and the awaking mountains. Then, catching sight of Stephen Dedalus, he bent towards him and made rapid crosses in the air, gurgling in his throat and shaking his head. Stephen Dedalus, displeased and sleepy, leaned his arms on the top of the staircase and looked coldly at the shaking gurgling face that blessed him, equine in its length, and at the light untonsured hair, grained and hued like pale oak.</p>
+<p>Buck Mulligan peeped an instant under the mirror and then covered the bowl smartly.</p>
+<p>—Back to barracks! he said sternly.</p>
+<p>He added in a preacher’s tone:</p>
+<p>—For this, O dearly beloved, is the genuine Christine: body and soul and blood and ouns. Slow music, please. Shut your eyes, gents. One moment. A little trouble about those white corpuscles. Silence, all.</p>
+<p>He peered sideways up and gave a long slow whistle of call, then paused awhile in rapt attention, his even white teeth glistening here and there with gold points. Chrysostomos. Two strong shrill whistles answered through the calm.</p>
+<p>—Thanks, old chap, he cried briskly. That will do nicely. Switch off the current, will you?</p>
+<p>He skipped off the gunrest and looked gravely at his watcher, gathering about his legs the loose folds of his gown. The plump shadowed face and sullen oval jowl recalled a prelate, patron of arts in the middle ages. A pleasant smile broke quietly over his lips.</p>
+      </div>
+      <div class="ulysses-text" aria-hidden="true">
+<p>Stately, plump Buck Mulligan came from the stairhead, bearing a bowl of lather on which a mirror and a razor lay crossed. A yellow dressinggown, ungirdled, was sustained gently behind him on the mild morning air. He held the bowl aloft and intoned:</p>
+<p>—Introibo ad altare Dei.</p>
+<p>Halted, he peered down the dark winding stairs and called out coarsely:</p>
+<p>—Come up, Kinch! Come up, you fearful jesuit!</p>
+<p>Solemnly he came forward and mounted the round gunrest. He faced about and blessed gravely thrice the tower, the surrounding land and the awaking mountains. Then, catching sight of Stephen Dedalus, he bent towards him and made rapid crosses in the air, gurgling in his throat and shaking his head. Stephen Dedalus, displeased and sleepy, leaned his arms on the top of the staircase and looked coldly at the shaking gurgling face that blessed him, equine in its length, and at the light untonsured hair, grained and hued like pale oak.</p>
+<p>Buck Mulligan peeped an instant under the mirror and then covered the bowl smartly.</p>
+<p>—Back to barracks! he said sternly.</p>
+<p>He added in a preacher’s tone:</p>
+<p>—For this, O dearly beloved, is the genuine Christine: body and soul and blood and ouns. Slow music, please. Shut your eyes, gents. One moment. A little trouble about those white corpuscles. Silence, all.</p>
+<p>He peered sideways up and gave a long slow whistle of call, then paused awhile in rapt attention, his even white teeth glistening here and there with gold points. Chrysostomos. Two strong shrill whistles answered through the calm.</p>
+<p>—Thanks, old chap, he cried briskly. That will do nicely. Switch off the current, will you?</p>
+<p>He skipped off the gunrest and looked gravely at his watcher, gathering about his legs the loose folds of his gown. The plump shadowed face and sullen oval jowl recalled a prelate, patron of arts in the middle ages. A pleasant smile broke quietly over his lips.</p>
+      </div>
+    </div>
   </div>
   <div class="menuShell">
     <aside class="menuBrand">
